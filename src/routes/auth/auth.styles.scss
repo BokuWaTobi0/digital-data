@@ -1,0 +1,84 @@
+.auth-div{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 340px;
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: rgb(53, 29, 85);
+    color: ghostwhite;
+    .main{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 60%;
+        .head{
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            h1{
+                margin-bottom: -5px;
+            }
+        }
+        form{
+          display: flex;
+          flex-direction: column;
+          gap: 25px;
+          width: 75%;
+            input{
+          color: ghostwhite;
+          -webkit-box-shadow: 0 0 0 1000px rgb(53, 29, 85) inset !important; /* or your desired background */
+          box-shadow: 0 0 0 1000px rgb(53, 29, 85) inset !important;
+          -webkit-text-fill-color: #fff; /* Ensure text is visible */
+          border-bottom: 1px solid white;
+            }
+          .pass{
+              position: relative;
+              display: flex;
+              input{
+                  width: 100%;
+              }
+              .eye{
+                  position: absolute;
+                  right: 0;
+                  bottom: 5px;
+                  font-size: 1.2rem;
+                  cursor: pointer;
+                  color: rgb(203, 203, 203);
+              }
+          }
+      }
+      button{
+        font-size: 1.3rem;
+      }
+
+    }
+    .img{
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        img{
+        width: 90%;
+        filter: drop-shadow(-10px 15px 1px rgb(14, 4, 4));
+        }
+    }
+}
+@media screen and (max-width:520px){
+  .auth-div{
+    flex-direction: column;
+    .main{
+      width: 100%;
+    }
+    .img{
+      img{
+        width: 40%;
+        transform: rotate(90deg);
+      }
+    }
+  }
+}

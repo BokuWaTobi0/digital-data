@@ -1,0 +1,14 @@
+.user-div{
+    min-height: 80vh;
+    padding: 20px;
+    border-radius: 5px;
+    gap: 30px;
+    h1{
+        text-align: center;
+    }
+    .main{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
