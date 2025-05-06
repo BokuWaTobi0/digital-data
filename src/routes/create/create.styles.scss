@@ -1,3 +1,340 @@
-.create-div{
+.create-div {
+    min-height: 80vh;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
     
+    h1 {
+        text-align: center;
+        color: rgb(53, 29, 85);
+        margin-bottom: 30px;
+    }
+    
+    .form-container {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+        
+        h2 {
+            color: rgb(53, 29, 85);
+            margin-bottom: 15px;
+        }
+        
+        .info-text {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            
+            label {
+                font-weight: 500;
+                margin-bottom: 8px;
+                color: #444;
+            }
+            
+            .c-input {
+                padding: 10px 0;
+                font-size: 1rem;
+                &:focus {
+                    border-color: rgb(53, 29, 85);
+                }
+            }
+            
+            select.c-input {
+                background-color: transparent;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                
+                &:focus {
+                    border-color: rgb(53, 29, 85);
+                }
+            }
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            
+            @media (max-width: 768px) {
+                flex-direction: column;
+            }
+        }
+        
+        .date-group {
+            display: flex;
+            gap: 15px;
+            
+            @media (max-width: 768px) {
+                flex-direction: column;
+            }
+        }
+        
+        .c-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            margin-top: 10px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.15) 100%), 
+                radial-gradient(at top center, rgba(255,255,255,0.40) 0%, rgba(0,0,0,0.40) 120%) #989898;
+            
+            &.next-btn, &.save-btn, &.finish-btn {
+                background-color: rgb(53, 29, 85);
+                align-self: flex-end;
+            }
+        }
+        
+        .batch-info-display {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid rgb(53, 29, 85);
+            
+            h3 {
+                color: rgb(53, 29, 85);
+                margin-bottom: 10px;
+            }
+            
+            p {
+                margin-bottom: 15px;
+                line-height: 1.5;
+            }
+            
+            .back-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: none;
+                color: rgb(53, 29, 85);
+                font-weight: 500;
+                padding: 5px;
+                font-size: 0.9rem;
+                
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+        
+        // Person Selection Styles
+        .person-selection {
+            h2 {
+                margin-bottom: 20px;
+            }
+            
+            .selection-tabs {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 25px;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 15px;
+                
+                .tab-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 10px 15px;
+                    background-color: #f5f5f5;
+                    border-radius: 6px;
+                    border: 1px solid #ddd;
+                    color: #555;
+                    font-weight: 500;
+                    transition: all 0.2s ease;
+                    
+                    &:hover {
+                        background-color: #eee;
+                    }
+                    
+                    &.active {
+                        background-color: rgb(53, 29, 85);
+                        color: white;
+                        border-color: rgb(53, 29, 85);
+                    }
+                }
+            }
+            
+            .search-person-form {
+                margin-bottom: 20px;
+                
+                .search-person {
+                    display: flex;
+                    gap: 10px;
+                    
+                    .search-input {
+                        flex: 1;
+                        padding: 10px 15px;
+                        border: 1px solid #ddd;
+                        border-radius: 6px;
+                        font-size: 1rem;
+                        
+                        &:focus {
+                            outline: none;
+                            border-color: rgb(53, 29, 85);
+                        }
+                    }
+                    
+                    .search-btn {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 10px 15px;
+                        border-radius: 6px;
+                        background-color: rgb(53, 29, 85);
+                        color: white;
+                        font-weight: 400;
+                    }
+                }
+            }
+            
+            .people-results {
+                margin: 20px 0;
+                
+                h3 {
+                    color: rgb(53, 29, 85);
+                    margin-bottom: 15px;
+                    font-size: 1.1rem;
+                }
+                
+                .people-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    max-height: 250px;
+                    overflow-y: auto;
+                    padding: 5px;
+                    
+                    .person-card {
+                        padding: 12px 15px;
+                        border-radius: 6px;
+                        background-color: #f9f9f9;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border: 1px solid #eee;
+                        
+                        &:hover {
+                            background-color: #f0f0f0;
+                        }
+                        
+                        &.selected {
+                            background-color: #e8f0fe;
+                            border-color: #c2d7ff;
+                        }
+                        
+                        .person-name {
+                            font-weight: 500;
+                            color: #333;
+                            margin-bottom: 5px;
+                        }
+                        
+                        .person-details {
+                            font-size: 0.9rem;
+                            color: #666;
+                        }
+                    }
+                }
+            }
+            
+            .no-results {
+                text-align: center;
+                padding: 20px;
+                color: #666;
+            }
+            
+            .selected-person-details {
+                background-color: #f9fbff;
+                border-radius: 8px;
+                padding: 20px;
+                margin-top: 20px;
+                border: 1px solid #e0e7ff;
+                
+                h3 {
+                    color: rgb(53, 29, 85);
+                    margin-bottom: 15px;
+                }
+                
+                .details-card {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                    gap: 15px;
+                    margin-bottom: 20px;
+                    
+                    p {
+                        margin: 0;
+                        padding: 8px 0;
+                    }
+                }
+                
+                .current-enrollments {
+                    margin: 20px 0;
+                    padding-top: 15px;
+                    border-top: 1px solid #eee;
+                    
+                    h4 {
+                        color: rgb(53, 29, 85);
+                        margin-bottom: 10px;
+                        font-size: 1rem;
+                    }
+                    
+                    ul {
+                        list-style: circle;
+                        margin-left: 20px;
+                        
+                        li {
+                            padding: 6px 0;
+                            display: flex;
+                            justify-content: space-between;
+                            
+                            .cert-num {
+                                color: #666;
+                                font-size: 0.9rem;
+                            }
+                        }
+                    }
+                }
+                
+                .certificate-form {
+                    margin-top: 20px;
+                    padding-top: 15px;
+                    border-top: 1px solid #eee;
+                }
+            }
+            
+            .new-person {
+                h3 {
+                    color: rgb(53, 29, 85);
+                    margin-bottom: 10px;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .create-div {
+        .form-container {
+            .selection-tabs {
+                flex-direction: column;
+            }
+            
+            .search-person {
+                flex-direction: column;
+            }
+        }
+    }
 }

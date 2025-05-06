@@ -1,3 +1,71 @@
-.home-div{
-    
+.home-div {
+    min-height: 80vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+
+    h1 {
+        text-align: center;
+        color: rgb(53, 29, 85);
+        font-size: 2.5rem;
+        margin-top: 20px;
+    }
+
+    .operations-container {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 1200px;
+        width: 100%;
+        padding: 20px;
+
+        .operation-card {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.15) 100%), 
+                        radial-gradient(at top center, rgba(255,255,255,0.40) 0%, rgba(0,0,0,0.40) 120%) #989898;
+            background-blend-mode: multiply,multiply;
+            border-radius: 15px;
+            padding: 30px;
+            width: 300px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            color: ghostwhite;
+
+            &:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            }
+
+            .operation-icon {
+                font-size: 3rem;
+                margin-bottom: 20px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+
+            p {
+                font-size: 1rem;
+                opacity: 0.9;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .home-div {
+        .operations-container {
+            padding: 10px;
+            
+            .operation-card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    }
 }
