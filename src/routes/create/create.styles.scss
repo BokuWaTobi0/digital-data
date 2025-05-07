@@ -320,6 +320,17 @@
                     color: rgb(53, 29, 85);
                     margin-bottom: 10px;
                 }
+                form{
+                    .c-btn{
+                        &:disabled{
+                            background-color: gray;
+                        }
+                        .loader-div{
+                            border: 3.5px solid rgba(174, 174, 174, 0.6);
+                            border-top-color: ghostwhite;
+                        }
+                    }
+                }
             }
         }
     }

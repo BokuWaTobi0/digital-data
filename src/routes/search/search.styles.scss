@@ -20,6 +20,13 @@
         .search-bar {
             display: flex;
             gap: 10px;
+            .search-type{
+                padding: 8px 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 0.95rem;
+                outline: none;
+            }
             
             .search-input {
                 flex: 1;
@@ -44,9 +51,13 @@
                 font-size: 1rem;
                 background-color: rgb(53, 29, 85);
                 color: white;
-                
-                &:hover {
-                    background-color: darken(rgb(53, 29, 85), 5%);
+                &:disabled{
+                    background-color: gray;
+                    cursor: not-allowed;
+                }
+                .loader-div{
+                    border: 3.5px solid rgba(174, 174, 174, 0.6);
+                    border-top-color: ghostwhite;
                 }
             }
             
@@ -119,133 +130,109 @@
                     }
                 }
             }
+            .field-search-btn{
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-size: 1.2rem;
+                background-color: rgb(53, 29, 85);
+                color: white;
+                margin: 0 auto;
+                margin-top: 20px;
+                &:disabled{
+                    background-color: gray;
+                    cursor: not-allowed;
+                }
+                .loader-div{
+                    border: 3.5px solid rgba(174, 174, 174, 0.6);
+                    border-top-color: ghostwhite;
+                }
+            }
+            .query-builder{
+                color: gray;
+                .heading{
+                    font-weight: 600;
+                    font-size: 1.1rem;
+                    color: black;
+                }
+                span{
+                    color: rgb(51, 51, 51);
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                }
+            }
         }
     }
     
     .results-container {
+        
         h2 {
             color: rgb(53, 29, 85);
             margin-bottom: 20px;
         }
+        overflow: auto;
+        
         
         .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 20px;
-            
-            .result-card {
-                background-color: white;
-                border-radius: 10px;
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-                overflow: hidden;
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
-                
-                &:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-                }
-                
-                .result-header {
-                    padding: 15px;
-                    background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.15) 100%), 
-                        radial-gradient(at top center, rgba(255,255,255,0.40) 0%, rgba(0,0,0,0.40) 120%) #989898;
-                    background-blend-mode: multiply,multiply;
-                    color: white;
-                    
-                    h3 {
-                        margin: 0 0 8px 0;
-                        font-size: 1.2rem;
-                    }
-                    
-                    .person-info {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            font-size: 1.05rem;
+            // box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            min-width: 500px;
+            thead{
+                border-radius: 3px;
+                display: flex;
+                background-color: rgb(53, 29, 85);
+                color: ghostwhite;
+                tr{
+                    width: 100%;
+                    display: flex;
+                    th{
+                        min-width: 20%;
+                        text-align: left;
                         display: flex;
-                        gap: 15px;
-                        font-size: 0.85rem;
-                        opacity: 0.9;
+                        align-items: center;
+                        padding: 12px;
                     }
-                }
-                
-                .person-enrollments {
-                    padding: 15px;
-                    
-                    h4 {
-                        margin: 0 0 15px 0;
-                        color: rgb(53, 29, 85);
-                        font-size: 1rem;
-                        border-bottom: 1px solid #eee;
-                        padding-bottom: 10px;
-                    }
-                    
-                    .enrollment-item {
-                        background-color: #f9f9f9;
-                        border-radius: 6px;
-                        margin-bottom: 12px;
-                        overflow: hidden;
-                        
-                        &:last-child {
-                            margin-bottom: 0;
-                        }
-                        
-                        .enrollment-header {
-                            padding: 10px 15px;
-                            background-color: #f0f0f0;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            
-                            .course-name {
-                                font-weight: 500;
-                                color: #333;
-                            }
-                            
-                            .certificate {
-                                font-size: 0.8rem;
-                                background-color: rgb(53, 29, 85);
-                                color: white;
-                                padding: 3px 8px;
-                                border-radius: 15px;
-                            }
-                        }
-                        
-                        .enrollment-details {
-                            padding: 10px 15px;
-                            
-                            .detail-row {
-                                display: flex;
-                                justify-content: space-between;
-                                padding: 5px 0;
-                                font-size: 0.9rem;
-                                
-                                .label {
-                                    font-weight: 500;
-                                    color: #555;
-                                }
-                                
-                                .value {
-                                    color: #333;
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                .person-footer {
-                    padding: 10px 15px;
-                    background-color: #f9f9f9;
-                    border-top: 1px solid #eee;
-                    font-size: 0.9rem;
-                    color: #666;
                 }
             }
-        }
-        
-        .no-results {
-            text-align: center;
-            padding: 50px 0;
-            
-            p {
-                color: #6c757d;
-                font-size: 1.1rem;
+            tbody{
+                border-radius: 3px;
+                
+                tr{
+                    width: 100%;
+                    display: flex;
+                    overflow: auto;
+                    &:hover{
+                        cursor: pointer;
+                        background-color: rgb(235, 235, 235);
+                    }
+                    td{
+                        min-width: 20%;
+                        overflow: auto;
+                        display: flex;
+                        align-items: center;
+                        padding: 12px;
+                        border-bottom: 1px solid rgb(202, 202, 202);
+                    }
+                    .name{
+                        gap: 7px;
+                        svg{
+                            font-size: 1.3rem;
+                        }
+                        .male{
+                            color: rgb(116, 116, 234);
+                        }
+                        .female{
+                            color: rgb(201, 131, 142);
+                        }
+                    }
+                }
             }
         }
         
@@ -280,9 +267,15 @@
                 }
             }
         }
-        
-        .results-grid {
-            grid-template-columns: 1fr !important;
+    }
+    @media (max-width: 568px) {
+        .results-container {
+            tbody{
+                .name{
+                    flex-direction: column;
+                    text-align: center;
+                }
+            }
         }
     }
 }

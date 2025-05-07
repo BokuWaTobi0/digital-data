@@ -1,8 +1,13 @@
 import './create.styles.scss'
-import { useState, useEffect } from 'react';
-import { FaArrowRight, FaUserPlus, FaSave, FaArrowLeft, FaSearch, FaPlus, FaUser } from 'react-icons/fa';
+import { Fragment, useState } from 'react';
+import { FaArrowRight, FaUserPlus,  FaArrowLeft, FaPlus } from 'react-icons/fa';
+import Loader from '../../components/loader/loader.component';
+import { firestoreDb, realtimeDb } from '../../firebase';
+import { useToast } from '../../contexts/toast.context';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, update } from 'firebase/database';
 
-// Default course options
+
 const defaultCourses = [
     'BASIC', 
     'ADVANCE', 
@@ -29,10 +34,10 @@ const Create = () => {
         month: '',
         year: new Date().getFullYear()
     });
+    const {showToast}=useToast();
     
     const [personMode, setPersonMode] = useState('new');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedPerson, setSelectedPerson] = useState(null);
+    const [isLoading,setIsLoading]=useState(false);
     
     const [personalData, setPersonalData] = useState({
         firstName: '',
@@ -43,53 +48,6 @@ const Create = () => {
         certificateNumber: ''
     });
     
-    // Mock data for people and enrollments
-    const [people, setPeople] = useState([
-        {
-            id: 1,
-            firstName: 'John',
-            lastName: 'Doe',
-            gender: 'male',
-            mobileNumber: '1234567890',
-            referenceBy: 'Jane Smith'
-        },
-        {
-            id: 2,
-            firstName: 'Alice',
-            lastName: 'Johnson',
-            gender: 'female',
-            mobileNumber: '9876543210',
-            referenceBy: 'Bob Williams'
-        }
-    ]);
-    
-    const [enrollments, setEnrollments] = useState([
-        {
-            id: 1,
-            personId: 1,
-            course: 'Basic',
-            place: 'New York',
-            venue: 'Tech Hub',
-            day: '15',
-            month: 'June',
-            year: '2023',
-            certificateNumber: 'CERT001'
-        },
-        {
-            id: 2,
-            personId: 2,
-            course: 'Advance',
-            place: 'San Francisco',
-            venue: 'Code Center',
-            day: '22',
-            month: 'July',
-            year: '2023',
-            certificateNumber: 'CERT002'
-        }
-    ]);
-    
-    const [filteredPeople, setFilteredPeople] = useState([]);
-    const [currentEnrollments, setCurrentEnrollments] = useState([]);
     
     const handleBatchChange = (e) => {
         const { name, value } = e.target;
@@ -112,44 +70,8 @@ const Create = () => {
         setStep(2);
     };
     
-    const searchPeople = () => {
-        if (searchTerm.trim() === '') {
-            setFilteredPeople([]);
-            return;
-        }
-        
-        const results = people.filter(person => 
-            person.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            person.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            person.mobileNumber.includes(searchTerm)
-        );
-        
-        setFilteredPeople(results);
-    };
-    
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-    };
-    
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        searchPeople();
-    };
-    
-    const selectPerson = (person) => {
-        setSelectedPerson(person);
-        setPersonMode('existing');
-        
-        // Find current enrollments for this person
-        const personEnrollments = enrollments.filter(enrollment => 
-            enrollment.personId === person.id
-        );
-        setCurrentEnrollments(personEnrollments);
-    };
-    
     const switchToNewPerson = () => {
         setPersonMode('new');
-        setSelectedPerson(null);
         setPersonalData({
             firstName: '',
             lastName: '',
@@ -160,80 +82,85 @@ const Create = () => {
         });
     };
 
-    const handlePersonalSubmit = (e) => {
+    const handlePersonalSubmit = async(e) => {
         e.preventDefault();
-        
         if (personMode === 'new') {
-            // Create new person
             const newPerson = {
-                id: Date.now(),
-                firstName: personalData.firstName,
+                firstName: personalData.firstName, 
                 lastName: personalData.lastName,
                 gender: personalData.gender,
                 mobileNumber: personalData.mobileNumber,
-                referenceBy: personalData.referenceBy
+                referenceBy: personalData.referenceBy,
+                certificateNumber:personalData.certificateNumber
             };
+            const record={
+                firstName: personalData.firstName.toLowerCase(),
+                lastName: personalData.lastName.toLowerCase(),
+                gender: personalData.gender.toLowerCase(),
+                mobileNumber: personalData.mobileNumber,
+                place:batchData.place.toLowerCase(),
+                courseDetails:[{
+                    course:batchData.course.toLowerCase(),
+                    venue:batchData.venue.toLowerCase(),
+                    day:batchData.day,
+                    month:batchData.month.toLowerCase(),
+                    year:batchData.year,
+                    referenceBy:personalData.referenceBy.toLowerCase(),
+                    certificateNumber:personalData.certificateNumber
+                }]
+            }
             
-            // Create new enrollment
-            const newEnrollment = {
-                id: Date.now() + 1,
-                personId: newPerson.id,
-                certificateNumber: personalData.certificateNumber,
-                ...batchData
-            };
-            
-            setPeople([...people, newPerson]);
-            setEnrollments([...enrollments, newEnrollment]);
-            
-            // Reset form
-            setPersonalData({
-                firstName: '',
-                lastName: '',
-                gender: 'male',
-                mobileNumber: '',
-                referenceBy: '',
-                certificateNumber: ''
-            });
-            
-            alert('New person and enrollment added successfully!');
-        } else {
-            // Create new enrollment for existing person
-            const newEnrollment = {
-                id: Date.now(),
-                personId: selectedPerson.id,
-                certificateNumber: personalData.certificateNumber,
-                ...batchData
-            };
-            
-            setEnrollments([...enrollments, newEnrollment]);
-            setCurrentEnrollments([...currentEnrollments, newEnrollment]);
-            
-            // Reset certificate number only
-            setPersonalData({
-                ...personalData,
-                certificateNumber: ''
-            });
-            
-            alert('New enrollment added for existing person!');
-        }
+            if(Object.values(newPerson).length!==6 || Object.values(batchData).length!==6) {
+                showToast('some details are missing, try re-entering batch and person details',6000)
+                return
+            }
+            try{
+                setIsLoading(true)
+                const personRef = await addDoc(collection(firestoreDb,'persons'),record);
+                const id = personRef.id;
+
+                //rtdb 
+                const updates={}
+                //yearsData path
+                updates[`yearsData/${record.courseDetails[0].year}/${record.courseDetails[0].month}/${record.courseDetails[0].course}/${record.courseDetails[0].venue}/${id}`]=true;
+
+                //allYears path
+                updates[`allYears/${record.courseDetails[0].year}`]=true;
+
+                //allVenues path
+                updates[`allVenues/${record.courseDetails[0].venue}`]=true;
+
+                await update(ref(realtimeDb),updates);
+
+                setPersonalData({
+                    firstName: '',
+                    lastName: '',
+                    gender: 'male',
+                    mobileNumber: '',
+                    referenceBy: '',
+                    certificateNumber: ''
+                });
+                showToast('Added successfully')
+            }catch(e){
+                console.error(e)
+                showToast('Error adding person try again later')
+                alert('error try again later')
+            }finally{
+                setIsLoading(false)
+            }
+        } 
     };
 
     const goBack = () => {
         setStep(1);
     };
     
-    useEffect(() => {
-        if (searchTerm.trim() === '') {
-            setFilteredPeople([]);
-        }
-    }, [searchTerm]);
 
     return (
         <div className='create-div'>
             <h1>Data Entry</h1>
             
             {step === 1 ? (
-                // Step 1: Batch Information Form
                 <div className='form-container'>
                     <h2>Batch Information</h2>
                     <p className='info-text'>Enter default information for this batch</p>
@@ -264,6 +191,7 @@ const Create = () => {
                                 value={batchData.place} 
                                 onChange={handleBatchChange}
                                 required
+                                maxLength={200}
                             />
                         </div>
                         
@@ -276,6 +204,7 @@ const Create = () => {
                                 value={batchData.venue} 
                                 onChange={handleBatchChange}
                                 required
+                                maxLength={250}
                             />
                         </div>
                         
@@ -365,106 +294,7 @@ const Create = () => {
                                 <FaPlus />
                                 <span>Add New Person</span>
                             </button>
-                            <button 
-                                className={`tab-btn ${personMode === 'existing' ? 'active' : ''}`}
-                                onClick={() => setPersonMode('existing')}
-                            >
-                                <FaUser />
-                                <span>Select Existing Person</span>
-                            </button>
                         </div>
-                        
-                        {personMode === 'existing' && (
-                            <div className='existing-person'>
-                                <form onSubmit={handleSearchSubmit} className='search-person-form'>
-                                    <div className='search-person'>
-                                        <input 
-                                            type='text'
-                                            placeholder='Search by name or mobile number...'
-                                            value={searchTerm}
-                                            onChange={handleSearchChange}
-                                            className='search-input'
-                                        />
-                                        <button type='submit' className='search-btn'>
-                                            <FaSearch />
-                                            <span>Search</span>
-                                        </button>
-                                    </div>
-                                </form>
-                                
-                                {filteredPeople.length > 0 ? (
-                                    <div className='people-results'>
-                                        <h3>Search Results</h3>
-                                        <div className='people-list'>
-                                            {filteredPeople.map(person => (
-                                                <div 
-                                                    key={person.id} 
-                                                    className={`person-card ${selectedPerson && selectedPerson.id === person.id ? 'selected' : ''}`}
-                                                    onClick={() => selectPerson(person)}
-                                                >
-                                                    <div className='person-name'>
-                                                        {person.firstName} {person.lastName}
-                                                    </div>
-                                                    <div className='person-details'>
-                                                        <span>{person.gender} | {person.mobileNumber}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : searchTerm ? (
-                                    <div className='no-results'>
-                                        <p>No people found. Try a different search or add a new person.</p>
-                                    </div>
-                                ) : null}
-                                
-                                {selectedPerson && (
-                                    <div className='selected-person-details'>
-                                        <h3>Selected Person</h3>
-                                        <div className='details-card'>
-                                            <p><strong>Name:</strong> {selectedPerson.firstName} {selectedPerson.lastName}</p>
-                                            <p><strong>Gender:</strong> {selectedPerson.gender}</p>
-                                            <p><strong>Mobile:</strong> {selectedPerson.mobileNumber}</p>
-                                            <p><strong>Reference:</strong> {selectedPerson.referenceBy}</p>
-                                        </div>
-                                        
-                                        {currentEnrollments.length > 0 && (
-                                            <div className='current-enrollments'>
-                                                <h4>Current Enrollments</h4>
-                                                <ul>
-                                                    {currentEnrollments.map(enrollment => (
-                                                        <li key={enrollment.id}>
-                                                            <strong>{enrollment.course}</strong> ({enrollment.month} {enrollment.year})
-                                                            <span className='cert-num'>Cert: {enrollment.certificateNumber}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                        
-                                        <form onSubmit={handlePersonalSubmit} className='certificate-form'>
-                                            <div className='form-group'>
-                                                <label>Certificate Number for this Course</label>
-                                                <input 
-                                                    type='text' 
-                                                    name='certificateNumber' 
-                                                    className='c-input'
-                                                    value={personalData.certificateNumber} 
-                                                    onChange={handlePersonalChange}
-                                                    required
-                                                />
-                                            </div>
-                                            
-                                            <button type='submit' className='c-btn save-btn'>
-                                                <FaPlus />
-                                                <span>Add Enrollment</span>
-                                            </button>
-                                        </form>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        
                         {personMode === 'new' && (
                             <div className='new-person'>
                                 <h3>Personal Information</h3>
@@ -481,6 +311,7 @@ const Create = () => {
                                                 value={personalData.firstName} 
                                                 onChange={handlePersonalChange}
                                                 required
+                                                maxLength={70}
                                             />
                                         </div>
                                         
@@ -493,6 +324,7 @@ const Create = () => {
                                                 value={personalData.lastName} 
                                                 onChange={handlePersonalChange}
                                                 required
+                                                maxLength={70}
                                             />
                                         </div>
                                     </div>
@@ -521,6 +353,7 @@ const Create = () => {
                                                 value={personalData.mobileNumber} 
                                                 onChange={handlePersonalChange}
                                                 required
+                                                minLength={10}
                                             />
                                         </div>
                                     </div>
@@ -534,6 +367,7 @@ const Create = () => {
                                                 className='c-input'
                                                 value={personalData.referenceBy} 
                                                 onChange={handlePersonalChange}
+                                                maxLength={100}
                                             />
                                         </div>
                                         
@@ -546,13 +380,16 @@ const Create = () => {
                                                 value={personalData.certificateNumber} 
                                                 onChange={handlePersonalChange}
                                                 required
+                                                maxLength={200}
                                             />
                                         </div>
                                     </div>
                                     
-                                    <button type='submit' className='c-btn save-btn'>
+                                    <button type='submit' className='c-btn save-btn' disabled={isLoading}> 
+                                        {isLoading ? <Loader lh={'23px'} lw={'23px'} /> : <Fragment>
                                         <FaUserPlus />
                                         <span>Add Person & Enrollment</span>
+                                        </Fragment>}
                                     </button>
                                 </form>
                             </div>

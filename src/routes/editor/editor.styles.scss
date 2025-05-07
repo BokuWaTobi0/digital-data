@@ -1,0 +1,204 @@
+// Variables
+$primary-color: #3b82f6;
+$primary-hover: #2563eb;
+$danger-color: #ef4444;
+$danger-hover: #dc2626;
+$success-color: #10b981;
+$success-hover: #059669;
+$text-color: #374151;
+$light-text: #6b7280;
+$border-color: #e5e7eb;
+$bg-white: #ffffff;
+$bg-gray-50: #f9fafb;
+$bg-blue-50: #eff6ff;
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$border-radius: 0.375rem;
+$spacing-1: 0.25rem;
+$spacing-2: 0.5rem;
+$spacing-3: 0.75rem;
+$spacing-4: 1rem;
+$spacing-6: 1.5rem;
+$spacing-8: 2rem;
+
+
+@mixin focus-ring {
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba($primary-color, 0.3);
+  }
+}
+
+@mixin button-style($bg-color, $hover-color) {
+  background-color: $bg-color;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-weight: 500;
+  
+  &:hover {
+    background-color: $hover-color;
+  }
+  
+  @include focus-ring;
+}
+
+// Base styles
+.user-form-container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: $spacing-6;
+  background-color: $bg-white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-md;
+}
+
+.form-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: $spacing-6;
+  text-align: center;
+}
+
+.info-section {
+  margin-bottom: $spacing-8;
+  padding: $spacing-4;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: $spacing-4;
+  color: $text-color;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-4;
+}
+
+// Form Elements
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-4;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: $spacing-3;
+  
+  &.full-width {
+    @media (min-width: 768px) {
+      grid-column: span 2;
+    }
+  }
+}
+
+.input-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: $spacing-1;
+  color: $text-color;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: $spacing-2;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  font-size: 0.9rem;
+  @include focus-ring;
+  
+  &:focus {
+    border-color: $primary-color;
+  }
+}
+
+.add-button {
+  @include button-style($success-color, $success-hover);
+  display: flex;
+  align-items: center;
+  padding: $spacing-2 $spacing-4;
+  
+  .plus-icon {
+    margin-right: $spacing-1;
+  }
+}
+
+.remove-button {
+  @include button-style($danger-color, $danger-hover);
+  padding: $spacing-1 $spacing-3;
+  font-size: 0.875rem;
+  &:disabled{
+    background-color: gray;
+    cursor: not-allowed;
+}
+.loader-div{
+  border: 3.5px solid rgba(174, 174, 174, 0.6);
+  border-top-color: ghostwhite;
+}
+}
+
+.save-button {
+  @include button-style($primary-color, $primary-hover);
+  padding: $spacing-2 $spacing-6;
+  font-weight: 500;
+  box-shadow: $shadow-md;
+}
+
+// Course Cards
+.course-card {
+  margin-bottom: $spacing-6;
+  padding: $spacing-4;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  background-color: $bg-gray-50;
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-3;
+}
+
+.course-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: $text-color;
+}
+
+.course-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-4;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// Form Actions
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: $spacing-6;
+  .loader-div{
+    border: 3.5px solid rgba(174, 174, 174, 0.6);
+    border-top-color: ghostwhite;
+}
+.save-button:disabled{
+    background-color: gray;
+    cursor: not-allowed;
+}
+}
