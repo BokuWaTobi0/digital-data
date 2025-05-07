@@ -1,8 +1,16 @@
 import './search.styles.scss'
-import { useState } from 'react';
-import { FaSearch, FaFilter, FaTimes, FaUserCircle } from 'react-icons/fa';
+import { Fragment, useState } from 'react';
+import { FaSearch,  FaTimes } from 'react-icons/fa';
+import { MdOutlineQueryStats } from "react-icons/md";
+import Loader from '../../components/loader/loader.component';
+import {useHelperContext} from '../../contexts/helper.context';
+import { FaRegCircleUser } from "react-icons/fa6";
+import { useNavigate } from 'react-router-dom';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { firestoreDb } from '../../firebase';
+import { useToast } from '../../contexts/toast.context';
+import { useDbDataContext } from '../../contexts/dbdata.context';
 
-// Default course options - keeping in sync with create component
 const defaultCourses = [
     'Basic', 
     'Advance', 
@@ -18,124 +26,58 @@ const defaultCourses = [
     'Level 2', 
     'Level 3'
 ];
-
+const monthsArray=[
+    'January','February','March','April','May','June','July','August','September','October','November','December'
+]
+  
 const Search = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [showFilters, setShowFilters] = useState(false);
+    const [searchType,setSearchType]=useState('first-name');
+    const [showSearchFields, setShowSearchFields] = useState(false);
+    const [isLoading,setIsLoading]=useState(false);
+    const {showToast}=useToast();
+    const {globalData,handleSetGlobalData}=useHelperContext();
+    const {allYears,allVenues,dbDataLoading}=useDbDataContext();
+    const router = useNavigate();
+    const [queryStament,setQueryStament]=useState({
+        year:'',
+        month:'',
+        course:'',
+        venue:''
+    })
     const [filters, setFilters] = useState({
         course: '',
-        place: '',
         month: '',
         year: '',
-        certificateNumber: ''
+        venue:'',
     });
     
-    // Mock data for demonstration - same data structure as in Create component
-    const [results, setResults] = useState([]);
-    
-    // Separate data for people and enrollments
-    const people = [
-        {
-            id: 1,
-            firstName: 'John',
-            lastName: 'Doe',
-            gender: 'male',
-            mobileNumber: '1234567890',
-            referenceBy: 'Jane Smith'
-        },
-        {
-            id: 2,
-            firstName: 'Alice',
-            lastName: 'Johnson',
-            gender: 'female',
-            mobileNumber: '9876543210',
-            referenceBy: 'Bob Williams'
-        }
-    ];
-    
-    const enrollments = [
-        {
-            id: 1,
-            personId: 1,
-            course: 'Basic',
-            place: 'New York',
-            venue: 'Tech Hub',
-            day: '15',
-            month: 'June',
-            year: '2023',
-            certificateNumber: 'CERT001'
-        },
-        {
-            id: 2,
-            personId: 2,
-            course: 'Advance',
-            place: 'San Francisco',
-            venue: 'Code Center',
-            day: '22',
-            month: 'July',
-            year: '2023',
-            certificateNumber: 'CERT002'
-        },
-        {
-            id: 3,
-            personId: 1,
-            course: 'Soul',
-            place: 'Chicago',
-            venue: 'Data Center',
-            day: '10',
-            month: 'August',
-            year: '2023',
-            certificateNumber: 'CERT003'
-        }
-    ];
-    
-    const handleSearch = (e) => {
+    const handleSearch = async(e) => {
         e.preventDefault();
-        
-        // First filter enrollments based on filters
-        const filteredEnrollments = enrollments.filter(enrollment => {
-            const matchesFilters = 
-                (filters.course === '' || enrollment.course === filters.course) &&
-                (filters.place === '' || enrollment.place === filters.place) &&
-                (filters.month === '' || enrollment.month === filters.month) &&
-                (filters.year === '' || enrollment.year === filters.year) &&
-                (filters.certificateNumber === '' || 
-                    enrollment.certificateNumber.toLowerCase().includes(filters.certificateNumber.toLowerCase()));
-                
-            return matchesFilters;
-        });
-        
-        // Get unique personIds from filtered enrollments
-        const enrollmentPersonIds = [...new Set(filteredEnrollments.map(e => e.personId))];
-        
-        // Filter people based on search term and enrollment match
-        const filteredPeople = people.filter(person => {
-            const matchesSearch = 
-                searchTerm === '' || 
-                person.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                person.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                person.mobileNumber.includes(searchTerm);
-                
-            // Include this person if they match the search term OR 
-            // if their enrollments match the filters and there's no search term
-            const personEnrollments = filteredEnrollments.filter(e => e.personId === person.id);
-            
-            return (matchesSearch && (searchTerm !== '' || personEnrollments.length > 0)) || 
-                  (searchTerm === '' && enrollmentPersonIds.includes(person.id));
-        });
-        
-        // Combine data for display
-        const combinedResults = filteredPeople.map(person => {
-            const personEnrollments = filteredEnrollments.filter(
-                enrollment => enrollment.personId === person.id
-            );
-            return {
-                ...person,
-                enrollments: personEnrollments
-            };
-        });
-        
-        setResults(combinedResults);
+        const queryTerm = searchType==='first-name' ? 'firstName' : 'mobileNumber'
+        if(searchTerm.trim()){
+            setIsLoading(true);
+            try{
+                const personsRef = collection(firestoreDb,'persons');
+                const q = query(personsRef,where(queryTerm,'==',searchTerm.toLowerCase()))
+                const snapshot = await getDocs(q);
+                if(!snapshot.empty){
+                    handleSetGlobalData(snapshot.docs.map(doc=>({key:doc.id,...doc.data()})))
+                }else{
+                    showToast('No mathcing results')
+                }
+            }catch(e){
+                console.error(e)
+                showToast('Error occured try again later')
+            }finally{
+                setIsLoading(false);
+            }
+        }
+
+    };
+    const handleFieldSearch = (e) => {
+        e.preventDefault();
+        showToast('not working yet bro....')
     };
     
     const handleFilterChange = (e) => {
@@ -144,6 +86,10 @@ const Search = () => {
             ...filters,
             [name]: value
         });
+        setQueryStament({
+            ...queryStament,
+            [name]:value
+        })
     };
     
     const clearFilters = () => {
@@ -154,44 +100,61 @@ const Search = () => {
             year: '',
             certificateNumber: ''
         });
+        setQueryStament({
+            year:'',
+            month:'',
+            course:'',
+            venue:''
+        })
     };
-    
-    // Get unique place, month, and year options from enrollments data
-    const placeOptions = [...new Set(enrollments.map(entry => entry.place))];
-    const monthOptions = [...new Set(enrollments.map(entry => entry.month))];
-    const yearOptions = [...new Set(enrollments.map(entry => entry.year))];
-    
+   
     return (
         <div className='search-div'>
             <h1>Search Data</h1>
-            
             <div className='search-container'>
                 <form onSubmit={handleSearch}>
                     <div className='search-bar'>
+                    <select 
+                        name='search-type'
+                        value={searchType}
+                        onChange={(e)=>{
+                            setSearchType(e.target.value)
+                            setSearchTerm('')
+                            }}
+                        className='search-type'
+                    >
+                        <option value='first-name'>First Name</option>
+                        <option value='mobile-number'>Mobile Number</option>
+                    </select>
                         <input 
-                            type='text' 
-                            placeholder='Search by name or mobile number...' 
+                            type='search' 
+                            placeholder={`Search by ${searchType==='mobile-number' ? 'Mobile Number':'First name'}`} 
                             className='search-input'
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            minLength={searchType==='mobile-number' ? 10 : 1}
                         />
-                        <button type='submit' className='search-button'>
-                            <FaSearch />
-                            <span>Search</span>
+                        <button type='submit' disabled={isLoading} className='search-button'>
+                           {isLoading ? <Loader lh={'19px'} lw={'19px'} /> : <Fragment>
+                           <FaSearch />
+                           <span>Search</span>
+                           </Fragment>}
                         </button>
                         <button 
                             type='button' 
-                            className={`filter-button ${showFilters ? 'active' : ''}`}
-                            onClick={() => setShowFilters(!showFilters)}
+                            className={`filter-button ${showSearchFields ? 'active' : ''}`}
+                            onClick={() => 
+                                setShowSearchFields(!showSearchFields)
+                                }
                         >
-                            <FaFilter />
+                            <MdOutlineQueryStats />
                         </button>
                     </div>
                     
-                    {showFilters && (
+                    {showSearchFields && (
                         <div className='filters-container'>
                             <div className='filters-header'>
-                                <h3>Filters</h3>
+                                <h3>Search Fields</h3>
                                 <button type='button' className='clear-filters' onClick={clearFilters}>
                                     <FaTimes />
                                     <span>Clear</span>
@@ -199,6 +162,34 @@ const Search = () => {
                             </div>
                             
                             <div className='filters-grid'>
+                            <div className='filter-group'>
+                                    <label>Year</label>
+                                    {dbDataLoading ? <Loader lh={'20px'} lw={'20px'}/> :<select 
+                                        name='year'
+                                        value={filters.year}
+                                        onChange={handleFilterChange}
+                                        className='filter-select'
+                                    >
+                                        <option value=''>All Years</option>
+                                        {allYears.map((year, index) => (
+                                            <option key={index} value={year}>{year}</option>
+                                        ))}
+                                    </select>}
+                                </div>
+                                <div className='filter-group'>
+                                    <label>Month</label>
+                                    <select 
+                                        name='month'
+                                        value={filters.month}
+                                        onChange={handleFilterChange}
+                                        className='filter-select'
+                                    >
+                                        <option value=''>All Months</option>
+                                        {monthsArray.map((month, index) => (
+                                            <option key={index} value={month}>{month}</option>
+                                        ))}
+                                    </select>
+                                </div>
                                 <div className='filter-group'>
                                     <label>Course</label>
                                     <select 
@@ -215,125 +206,67 @@ const Search = () => {
                                 </div>
                                 
                                 <div className='filter-group'>
-                                    <label>Place</label>
-                                    <select 
-                                        name='place'
-                                        value={filters.place}
+                                    <label>Venue</label>
+                                    {dbDataLoading ? <Loader lh={'20px'} lw={'20px'} /> :<select 
+                                        name='venue'
+                                        value={filters.venue}
                                         onChange={handleFilterChange}
                                         className='filter-select'
                                     >
-                                        <option value=''>All Places</option>
-                                        {placeOptions.map((place, index) => (
+                                        <option value=''>All Venues</option>
+                                        {allVenues.map((place, index) => (
                                             <option key={index} value={place}>{place}</option>
                                         ))}
-                                    </select>
+                                    </select>}
                                 </div>
                                 
-                                <div className='filter-group'>
-                                    <label>Month</label>
-                                    <select 
-                                        name='month'
-                                        value={filters.month}
-                                        onChange={handleFilterChange}
-                                        className='filter-select'
-                                    >
-                                        <option value=''>All Months</option>
-                                        {monthOptions.map((month, index) => (
-                                            <option key={index} value={month}>{month}</option>
-                                        ))}
-                                    </select>
-                                </div>
                                 
-                                <div className='filter-group'>
-                                    <label>Year</label>
-                                    <select 
-                                        name='year'
-                                        value={filters.year}
-                                        onChange={handleFilterChange}
-                                        className='filter-select'
-                                    >
-                                        <option value=''>All Years</option>
-                                        {yearOptions.map((year, index) => (
-                                            <option key={index} value={year}>{year}</option>
-                                        ))}
-                                    </select>
-                                </div>
                                 
-                                <div className='filter-group'>
-                                    <label>Certificate Number</label>
-                                    <input 
-                                        type='text'
-                                        name='certificateNumber'
-                                        placeholder='Enter certificate #'
-                                        value={filters.certificateNumber}
-                                        onChange={handleFilterChange}
-                                        className='filter-input'
-                                    />
-                                </div>
+                                
                             </div>
+                            <p className='query-builder'><span className='heading'>Query</span> : people who attended <span>{queryStament.venue || "null"}</span> venue for <span>{queryStament.course ||'null'}</span> course in <span>{queryStament.month || 'null'}</span> month of year <span>{queryStament.year || 'null'}</span> </p>
+                                <button title='field search' onClick={handleFieldSearch} disabled={ isLoading} className='field-search-btn'>
+                                    {isLoading ? <Loader lh={'22px'} lw={'22px'} /> : <Fragment>
+                                    <MdOutlineQueryStats />
+                                    <span>Search</span>
+                                    </Fragment>}
+                                </button>
                         </div>
                     )}
                 </form>
             </div>
             
             <div className='results-container'>
-                {results.length > 0 ? (
+                {globalData.length > 0 ? (
                     <>
-                        <h2>Search Results ({results.length})</h2>
-                        <div className='results-grid'>
-                            {results.map(person => (
-                                <div key={person.id} className='result-card'>
-                                    <div className='result-header'>
-                                        <h3>{person.firstName} {person.lastName}</h3>
-                                        <div className='person-info'>
-                                            <span>{person.gender}</span>
-                                            <span>{person.mobileNumber}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className='person-enrollments'>
-                                        <h4>Course Enrollments ({person.enrollments.length})</h4>
-                                        
-                                        {person.enrollments.map(enrollment => (
-                                            <div key={enrollment.id} className='enrollment-item'>
-                                                <div className='enrollment-header'>
-                                                    <span className='course-name'>{enrollment.course}</span>
-                                                    <span className='certificate'>#{enrollment.certificateNumber}</span>
-                                                </div>
-                                                
-                                                <div className='enrollment-details'>
-                                                    <div className='detail-row'>
-                                                        <span className='label'>Place:</span>
-                                                        <span className='value'>{enrollment.place}</span>
-                                                    </div>
-                                                    <div className='detail-row'>
-                                                        <span className='label'>Venue:</span>
-                                                        <span className='value'>{enrollment.venue}</span>
-                                                    </div>
-                                                    <div className='detail-row'>
-                                                        <span className='label'>Date:</span>
-                                                        <span className='value'>{enrollment.day} {enrollment.month} {enrollment.year}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    
-                                    <div className='person-footer'>
-                                        <span>Reference: {person.referenceBy}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <h2>Search Results ({globalData.length})</h2>
+                        <table className='results-grid'>
+                            <thead >
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Gender</th>
+                                    <th>Mobile</th>
+                                    <th>Place</th>
+                                    <th>Courses</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {globalData.map((d)=>{
+                                    return <tr key={d.key} onClick={()=>router(`/editor/${d.key}`,{state:d})}>
+                                        <td className='name'> <FaRegCircleUser className={d.gender} /> {d.firstName+' '+d.lastName}</td>
+                                        <td>{d.gender}</td>
+                                        <td>{d.mobileNumber}</td>
+                                        <td>{d.place}</td>
+                                        <td>{d.courseDetails.map(c=>c.course).join(', ')}</td>
+                                    </tr>
+                                })}
+                            </tbody>
+                        </table>
                     </>
-                ) : searchTerm || Object.values(filters).some(f => f !== '') ? (
-                    <div className='no-results'>
-                        <p>No results found. Try adjusting your search criteria.</p>
-                    </div>
-                ) : (
+                )  : (
                     <div className='search-prompt'>
                         <FaSearch className='prompt-icon' />
-                        <p>Enter a search term or apply filters to find entries</p>
+                        <p>Enter a search term or get data by parametres</p>
                     </div>
                 )}
             </div>

@@ -1,21 +1,15 @@
 import './menubar.styles.scss'
-import { useNavigate,Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { FaUserNinja,FaFolderPlus } from 'react-icons/fa6';
 import { FaSearch,FaHome } from "react-icons/fa";
-import { useState,Fragment } from 'react';
+import { Fragment } from 'react';
+import { useHelperContext } from '../../contexts/helper.context';
 
 const navIcons=[FaHome,FaFolderPlus,FaSearch];
 const nameArray=['/','Create','Search'];
 
 const Menubar = () => {
-    const [page,setPage]=useState('');
-    const router = useNavigate();
-
-    const handleNavIconClick=(name)=>{
-        const route = name.replace(/\s/g,'-').toLowerCase();
-        router(route)
-        setPage(name)
-    }
+    const {page,handleNavIconClick}=useHelperContext();
    
     return ( 
         <Fragment>

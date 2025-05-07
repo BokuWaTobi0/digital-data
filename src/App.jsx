@@ -10,6 +10,7 @@ import Home from "./routes/home/home.component";
 import User from "./routes/user/user.component";
 import Create from "./routes/create/create.component";
 import Search from "./routes/search/search.component";
+import Editor from "./routes/editor/editor.component";
 
 function App() {
     const [isLoading,setIsLoading]=useState(true);
@@ -42,6 +43,7 @@ function App() {
         <Route path="user" element={<User/>} />
         <Route path="create" element={<Create/>} />
         <Route path="search" element={<Search/>} />
+        <Route path="editor/:id" element={<Editor/>} />
       </Route>
     </Routes>
   )
