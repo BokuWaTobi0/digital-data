@@ -1,0 +1,52 @@
+.custom-dropdown {
+    position: relative;
+    border: 1px solid #ccc;
+    padding: 8px;
+    background: white;
+    cursor: pointer;
+    border-radius: 6px;
+  
+    .selected-option {
+      padding: 8px;
+      background: #f9f9f9;
+    }
+  
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      border: 1px solid #ccc;
+      background: white;
+      z-index: 999;
+      max-height: 250px;
+      overflow-y: auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 6px;
+    }
+  
+    .search-input {
+      width: 100%;
+      padding: 6px 10px;
+      border: none;
+      border-bottom: 1px solid #ddd;
+      outline: none;
+      box-sizing: border-box;
+    }
+  
+    .options-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+  
+      li {
+        padding: 8px 10px;
+        cursor: pointer;
+  
+        &:hover {
+          background-color: #f1f1f1;
+        }
+      }
+    }
+  }
+  
