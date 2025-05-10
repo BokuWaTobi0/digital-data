@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import {  useState } from 'react';
 import './editor.styles.scss'
-import { useLocation } from 'react-router-dom';
+import { useLocation,useNavigate } from 'react-router-dom';
 import Loader from '../../components/loader/loader.component';
 import { useHelperContext } from '../../contexts/helper.context';
 import { useToast } from '../../contexts/toast.context';
@@ -8,24 +8,25 @@ import { firestoreDb, realtimeDb } from '../../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useDbDataContext } from '../../contexts/dbdata.context';
 import { ref, update } from 'firebase/database';
+import { FaArrowUp } from "react-icons/fa";
 
 const defaultCourses = [
-  'Basic', 
-  'Advance', 
-  'Soul', 
-  'Crystal', 
-  'Psychic Self-Defence', 
-  'Kryashakthi', 
-  'Arhatic Yoga', 
-  'Spiritual Business Management', 
-  'Body Sculpting', 
-  'Retreat', 
-  'Level 1', 
-  'Level 2', 
-  'Level 3'
+  'basic', 
+  'advance', 
+  'soul', 
+  'crystal', 
+  'psychic self-defence', 
+  'kryashakthi', 
+  'arhatic yoga', 
+  'spiritual business management', 
+  'body sculpting', 
+  'retreat', 
+  'level 1', 
+  'level 2', 
+  'level 3'
 ];
 const monthsArray=[
-  'January','February','March','April','May','June','July','August','September','October','November','December'
+  'january','february','march','april','may','june','july','august','september','october','november','december'
 ]
 
 const Editor = () => {
@@ -35,7 +36,14 @@ const Editor = () => {
     const {globalData,handleSetGlobalData}=useHelperContext();
     const {showToast}=useToast();
     const {allYears,allVenues}=useDbDataContext();
+    const router = useNavigate();
 
+    if (!location.state) {
+      return <div>
+        <p>No user selected. Please navigate to the previous page and try again.</p>
+        <button className='c-btn' onClick={()=>router(-1)}>Go back</button>
+      </div>;
+    }
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -49,7 +57,7 @@ const Editor = () => {
         const updatedCourses = [...userData.courseDetails];
         updatedCourses[index] = {
           ...updatedCourses[index],
-          [field]: value
+          [field]: field !== 'certificateNumber' ? value.toLowerCase() : value 
         };
         
         setUserData(prevData => ({
@@ -92,11 +100,11 @@ const Editor = () => {
           return;
         }
         const updatedUserData={
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          gender: userData.gender,
-          mobileNumber: userData.mobileNumber,
-          place:userData.place
+          firstName: userData.firstName.toLowerCase(),
+          lastName: userData.lastName.toLowerCase(),
+          gender: userData.gender.toLowerCase(),
+          mobileNumber: userData.mobileNumber.toLowerCase(),
+          place:userData.place.toLowerCase()
         }
         const modifiedFields = {};
         for (const field in updatedUserData) {
@@ -126,67 +134,81 @@ const Editor = () => {
         }
       }      
 
-      const handleSaveCourseChanges = async () => {
-        const key = userData.key;
-        const existingRecord = globalData.find(person => person.key === key);
-      
-        if (!existingRecord) {
-          showToast("No matching record found. Try refreshing and retrying update.");
-          return;
-        }
-      
-        const existingCourses = existingRecord.courseDetails || [];
-        const updatedCourses = userData.courseDetails || [];
-      
-        // Deep comparison for changes
-        const isModified = JSON.stringify(existingCourses) !== JSON.stringify(updatedCourses);
-        if (!isModified) {
-          showToast("No changes detected in course details.");
-          return;
-        }
-      
-        try {
-          setIsLoading(true);
-          const docRef = doc(firestoreDb, 'persons', key);
-          await updateDoc(docRef, { courseDetails: updatedCourses });
-      
-          const newYears = new Set();
-          const newVenues = new Set();
-      
-          updatedCourses.forEach(course => {
-            if (course.year && !allYears.includes(course.year)) {
-              newYears.add(course.year);
-            }
-            if (course.venue && !allVenues.includes(course.venue)) {
-              newVenues.add(course.venue);
-            }
-          });
-      
-          if (newYears.size > 0 || newVenues.size > 0) {
-            const updates = {};
-            newYears.forEach(year => {
-              updates[`allYears/${year}`] = true;
-            });
-            newVenues.forEach(venue => {
-              updates[`allVenues/${venue}`] = true;
-            });
-      
-            await update(ref(realtimeDb), updates);
-          }
-      
-          const updatedGlobalData = globalData.map(person =>
-            person.key === key ? { ...person, courseDetails: updatedCourses } : person
-          );
-          handleSetGlobalData(updatedGlobalData);
-      
-          showToast("Course details updated successfully.");
-        } catch (e) {
-          console.error("Error updating course details:", e);
-          showToast("Error occurred while updating course details.");
-        } finally {
-          setIsLoading(false);
-        }
-      };
+  const handleSaveCourseChanges = async () => {
+  const key = userData.key;
+  const existingRecord = globalData.find(person => person.key === key);
+
+  if (!existingRecord) {
+    showToast("No matching record found. Try refreshing and retrying update.");
+    return;
+  }
+
+  const existingCourses = existingRecord.courseDetails || [];
+  const updatedCourses = userData.courseDetails || [];
+
+  // Deep comparison for changes
+  const isModified = JSON.stringify(existingCourses) !== JSON.stringify(updatedCourses);
+  if (!isModified) {
+    showToast("No changes detected in course details.");
+    return;
+  }
+
+  try {
+    setIsLoading(true);
+    const docRef = doc(firestoreDb, 'persons', key);
+    await updateDoc(docRef, { courseDetails: updatedCourses });
+
+    const updates = {};
+
+    updatedCourses.forEach(course => {
+      const { year, month, course: courseName, venue } = course;
+
+      if (year && !allYears.includes(year)) {
+        updates[`allYears/${year}`] = true;
+      }
+      if (venue && !allVenues.includes(venue)) {
+        updates[`allVenues/${venue}`] = true;
+      }
+      if (year && month && courseName && venue) {
+        updates[`yearsData/${year}/${month}/${courseName}/${venue}/${key}`] = true;
+      }
+    });
+
+    const removedCourses = existingCourses.filter(
+      oldCourse =>
+        !updatedCourses.some(
+          newCourse =>
+            oldCourse.course === newCourse.course &&
+            oldCourse.month === newCourse.month &&
+            oldCourse.year === newCourse.year &&
+            oldCourse.venue === newCourse.venue
+        )
+    );
+
+    removedCourses.forEach(course => {
+      const { year, month, course: courseName, venue } = course;
+      if (year && month && courseName && venue) {
+        updates[`yearsData/${year}/${month}/${courseName}/${venue}/${key}`] = null; 
+      }
+    });
+    if (Object.keys(updates).length > 0) {
+      await update(ref(realtimeDb), updates);
+    }
+
+    const updatedGlobalData = globalData.map(person =>
+      person.key === key ? { ...person, courseDetails: updatedCourses } : person
+    );
+    handleSetGlobalData(updatedGlobalData);
+
+    showToast("Course details updated successfully.");
+  } catch (e) {
+    console.error("Error updating course details:", e);
+    showToast("Error occurred while updating course details.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
     return ( 
         <div className="user-form-container">
@@ -283,18 +305,10 @@ const Editor = () => {
             </div>
             
             <div className="course-form-grid">
-              {/* <div className="form-group">
-                <label className="input-label">Course Name</label>
-                <input
-                  type="text"
-                  value={course.course}
-                  onChange={(e) => handleCourseChange(index, 'course', e.target.value)}
-                  className="form-input"
-                />
-              </div> */}
               <div className="form-group">
                 <label className="input-label">Course Name</label>
-                <select name='course' className="form-input" value={course.course} onChange={(e) => handleCourseChange(index, 'course', e.target.value)} >
+                <select name='course' className="form-input" value={course.course} onChange={(e) => handleCourseChange(index, 'course', e.target.value)} required >
+                <option value=''>course</option>
                 {defaultCourses.map((course, index) => (
                     <option key={index} value={course}>{course}</option>
                 ))}
@@ -308,21 +322,27 @@ const Editor = () => {
                   value={course.venue}
                   onChange={(e) => handleCourseChange(index, 'venue', e.target.value)}
                   className="form-input"
+                  maxLength={300}
+                  required
                 />
               </div>
               
               <div className="form-group">
                 <label className="input-label">Day</label>
                 <input
-                  type="text"
+                  type="number"
                   value={course.day}
                   onChange={(e) => handleCourseChange(index, 'day', e.target.value)}
                   className="form-input"
+                  min={'1'}
+                  max={'31'}
+                  required
                 />
               </div>
               <div className="form-group">
                 <label className="input-label">Month</label>
-                <select name='month' value={course.month} onChange={(e) => handleCourseChange(index, 'month', e.target.value)} className='form-input'>
+                <select name='month' value={course.month} onChange={(e) => handleCourseChange(index, 'month', e.target.value)} className='form-input' required>
+                <option value=''>month</option>
                 {monthsArray.map((month, index) => (
                     <option key={index} value={month}>{month}</option>
                 ))}
@@ -336,6 +356,9 @@ const Editor = () => {
                   value={course.year}
                   onChange={(e) => handleCourseChange(index, 'year', e.target.value)}
                   className="form-input"
+                  maxLength={20}
+                  placeholder='ex: 2025'
+                  required
                 />
               </div>
               
@@ -346,6 +369,8 @@ const Editor = () => {
                   value={course.referenceBy}
                   onChange={(e) => handleCourseChange(index, 'referenceBy', e.target.value)}
                   className="form-input"
+                  maxLength={300}
+                  required
                 />
               </div>
               
@@ -356,6 +381,8 @@ const Editor = () => {
                   value={course.certificateNumber}
                   onChange={(e) => handleCourseChange(index, 'certificateNumber', e.target.value)}
                   className="form-input"
+                  maxLength={300}
+                  required
                 />
               </div>
             </div>
@@ -367,7 +394,9 @@ const Editor = () => {
         </button>
       </div>
       </div>
-      
+      <div className='scroll-top' onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <FaArrowUp/>
+      </div>
     </div>
      );
 }

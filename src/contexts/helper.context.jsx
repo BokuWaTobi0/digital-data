@@ -7,13 +7,14 @@ export const HelperProvider=({children})=>{
     const [globalData,setGlobalData]=useState([])
     const router = useNavigate()
     const handleSetGlobalData=(d)=>setGlobalData(d);
+    const handleSetPage=(p)=>setPage(p);
     const handleNavIconClick=(name)=>{
         const route = name.replace(/\s/g,'-').toLowerCase();
         router(route)
         setPage(name)
     }
     return(
-        <HelperContext.Provider value={{page,handleNavIconClick,globalData,handleSetGlobalData}}>
+        <HelperContext.Provider value={{page,handleNavIconClick,globalData,handleSetGlobalData,handleSetPage}}>
             {children}
         </HelperContext.Provider>
     )
