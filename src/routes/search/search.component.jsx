@@ -1,6 +1,6 @@
 import './search.styles.scss'
 import { Fragment, useState } from 'react';
-import { FaSearch,  FaTimes } from 'react-icons/fa';
+import { FaSearch,  FaTimes,FaFileDownload } from 'react-icons/fa';
 import { MdOutlineQueryStats } from "react-icons/md";
 import Loader from '../../components/loader/loader.component';
 import {useHelperContext} from '../../contexts/helper.context';
@@ -11,6 +11,7 @@ import { useToast } from '../../contexts/toast.context';
 import { useDbDataContext } from '../../contexts/dbdata.context';
 import SearchableSelect from '../../components/searchable-select/searchable-select.component';
 import { get, ref } from 'firebase/database';
+import * as XLSX from 'xlsx';
 
 const defaultCourses = [
     'Basic', 
@@ -47,6 +48,30 @@ const Search = () => {
         venue:'',
     });
     
+
+    const exportTableDataToExcelSheet=()=>{
+        try{
+            setIsLoading(true);
+            const formattedData = globalData.map(d=>({
+                Name:`${d.firstName} ${d.lastName}`,
+                Gender: d.gender,
+                Mobile: d.mobileNumber,
+                Place: d.place,
+                Courses: d.courseDetails.map(c=>c.course).join(',')
+            }));
+            const worksheet = XLSX.utils.json_to_sheet(formattedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook,worksheet,"Users");
+            XLSX.writeFile(workbook,"UserData.xlsx");
+            showToast('Exported successfully')
+        }catch(e){
+            console.error(e)
+            showToast('Error occured try again later');
+        }finally{
+            setIsLoading(false);
+        }
+    }
+
     const handleSearch = async(e) => {
         e.preventDefault();
         const queryTerm = searchType==='first-name' ? 'firstName' : 'mobileNumber'
@@ -241,7 +266,12 @@ const Search = () => {
             <div className='results-container'>
                 {globalData.length > 0 ? (
                     <>
-                        <h2>Search Results ({globalData.length})</h2>
+                        <div className='d-excel'>
+                            <h2>Search Results ({globalData.length})</h2>
+                            <button onClick={exportTableDataToExcelSheet}>{isLoading ? <Loader lh={'20px'} lw={'20px'} /> : <Fragment>
+                                <FaFileDownload/> <span>XLSX</span>
+                            </Fragment>}</button>
+                        </div>
                         <table className='results-grid'>
                             <thead >
                                 <tr>

@@ -168,10 +168,29 @@
     }
     
     .results-container {
-        
-        h2 {
+        .d-excel{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             color: rgb(53, 29, 85);
-            margin-bottom: 20px;
+
+            h2 {
+                margin-bottom: 20px;
+            }
+            button{
+                display: flex;
+                align-items: center;
+                flex-direction: column;
+                cursor: pointer;
+                gap: 4px;
+                background-color: inherit;
+                svg{
+                    font-size: 1.2rem;
+                }
+                span{
+                    font-size: 0.9rem;
+                }
+            }
         }
         overflow: auto;
         
