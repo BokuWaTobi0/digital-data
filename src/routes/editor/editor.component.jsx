@@ -1,4 +1,4 @@
-import {  useState } from 'react';
+import {   useState } from 'react';
 import './editor.styles.scss'
 import { useLocation,useNavigate } from 'react-router-dom';
 import Loader from '../../components/loader/loader.component';
@@ -283,12 +283,6 @@ const Editor = () => {
       <div className="info-section course-info">
         <div className="section-header">
           <h2 className="section-title">Course Details</h2>
-          <button
-            onClick={addNewCourse}
-            className="add-button"
-          >
-            <span className="plus-icon">+</span> Add Course
-          </button>
         </div>
         
         {userData.courseDetails.map((course, index) => (
@@ -389,6 +383,12 @@ const Editor = () => {
           </div>
         ))}
       <div className="form-actions">
+      <button
+            onClick={addNewCourse}
+            className="add-button"
+          >
+            <span className="plus-icon">+</span> Add Course
+          </button>
         <button className="save-button" disabled={isLoading} onClick={handleSaveCourseChanges}>
         {isLoading ? <Loader lh={'16px'} lw={'16px'} /> :"Save Course Changes"}
         </button>
