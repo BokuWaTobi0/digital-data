@@ -48,7 +48,6 @@ const Search = () => {
         year: '',
         venue:'',
     });
-    
 
     const exportTableDataToExcelSheet=()=>{
         try{
@@ -63,7 +62,7 @@ const Search = () => {
             const worksheet = XLSX.utils.json_to_sheet(formattedData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook,worksheet,"Users");
-            const fileName=isSearchedByField ? `${filters.year}_${filters.month.toLowerCase()}_${filters.course.toLowerCase()}_${filters.venue.toLowerCase()}` :`${searchTerm}`
+            const fileName=isSearchedByField ? `${filters.year}_${filters.month.toLowerCase()}_${filters.course.toLowerCase()}_${filters.venue.toLowerCase()}` :`${searchTerm || 'digital-data'}`
             XLSX.writeFile(workbook,`${fileName}.xlsx`);
             showToast('Exported successfully')
         }catch(e){
