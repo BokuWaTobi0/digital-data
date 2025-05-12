@@ -41,6 +41,7 @@ const Search = () => {
     const {globalData,handleSetGlobalData,handleSetPage}=useHelperContext();
     const {allYears,allVenues,dbDataLoading}=useDbDataContext();
     const router = useNavigate();
+    const [isSearchedByField,setIsSearchedByField]=useState(false);
     const [filters, setFilters] = useState({
         course: '',
         month: '',
@@ -62,7 +63,8 @@ const Search = () => {
             const worksheet = XLSX.utils.json_to_sheet(formattedData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook,worksheet,"Users");
-            XLSX.writeFile(workbook,"UserData.xlsx");
+            const fileName=isSearchedByField ? `${filters.year}_${filters.month.toLowerCase()}_${filters.course.toLowerCase()}_${filters.venue.toLowerCase()}` :`${searchTerm}`
+            XLSX.writeFile(workbook,`${fileName}.xlsx`);
             showToast('Exported successfully')
         }catch(e){
             console.error(e)
@@ -74,6 +76,7 @@ const Search = () => {
 
     const handleSearch = async(e) => {
         e.preventDefault();
+        if(isSearchedByField) setIsSearchedByField(false);
         const queryTerm = searchType==='first-name' ? 'firstName' : 'mobileNumber'
         if(searchTerm.trim()){
             setIsLoading(true);
@@ -97,6 +100,7 @@ const Search = () => {
     };
     const handleFieldSearch = async(e) => {
         e.preventDefault();
+        if(!isSearchedByField) setIsSearchedByField(true);
         const { course, year, month, venue } = filters;
 
         if (!course || !year || !month || !venue) {

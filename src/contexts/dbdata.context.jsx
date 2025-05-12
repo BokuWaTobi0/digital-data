@@ -1,7 +1,8 @@
 import PropTypes from "prop-types";
 import { createContext, useContext, useEffect, useState } from "react";
 import { onValue, ref } from "firebase/database";
-import { realtimeDb } from "../firebase";
+import { auth, realtimeDb } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const DbDataContext = createContext();
 export const DbDataProvider =({children})=>{
@@ -10,9 +11,11 @@ export const DbDataProvider =({children})=>{
     const [dbDataLoading,setIsDbDataLoading]=useState(true);
 
     useEffect(() => {
-        setIsDbDataLoading(true);
+        let unsubscribeFromDb =null;
+        const fetchYearsData=async()=>{
+          setIsDbDataLoading(true);
         const yearsRef = ref(realtimeDb, 'allYears');
-        const unsubscribe = onValue(yearsRef, (snapshot) => {
+        unsubscribeFromDb = onValue(yearsRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.val();
             setAllYears(Object.keys(data));
@@ -24,14 +27,25 @@ export const DbDataProvider =({children})=>{
           console.error("Error fetching allYears:", error);
           setIsDbDataLoading(false);
         });
+        }
       
-        return () => unsubscribe();
+        const unsubscribe = onAuthStateChanged(auth,(user)=>{
+          if(user){
+            fetchYearsData()
+          }
+        })
+        return ()=>{
+          unsubscribe()
+          if(unsubscribeFromDb) unsubscribeFromDb();
+        }
       }, []);
       
     useEffect(() => {
-        setIsDbDataLoading(true);
+        let unsubscribeFromDb=null;
+        const fetchVenuesData=async()=>{
+          setIsDbDataLoading(true);
         const venuesRef = ref(realtimeDb, 'allVenues');
-        const unsubscribe = onValue(venuesRef, (snapshot) => {
+        unsubscribeFromDb = onValue(venuesRef, (snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
       setAllVenues(Object.keys(data));
@@ -43,8 +57,17 @@ export const DbDataProvider =({children})=>{
     console.error("Error fetching allVenues:", error);
     setIsDbDataLoading(false);
   });
+        }
+        const unsubscribe=onAuthStateChanged(auth,(user)=>{
+          if(user){
+            fetchVenuesData();
+          }
+        })
 
-  return () => unsubscribe();
+  return () =>{
+    unsubscribe();
+    if(unsubscribeFromDb) unsubscribeFromDb()
+  }
 }, []);
 
     return(
