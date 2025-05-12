@@ -191,7 +191,7 @@ const Create = () => {
                                 value={batchData.place} 
                                 onChange={handleBatchChange}
                                 required
-                                maxLength={200}
+                                maxLength={250}
                             />
                         </div>
                         

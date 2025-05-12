@@ -1,15 +1,17 @@
 import './search.styles.scss'
 import { Fragment, useState } from 'react';
-import { FaSearch,  FaTimes } from 'react-icons/fa';
+import { FaSearch,  FaTimes,FaFileDownload } from 'react-icons/fa';
 import { MdOutlineQueryStats } from "react-icons/md";
 import Loader from '../../components/loader/loader.component';
 import {useHelperContext} from '../../contexts/helper.context';
-import { FaRegCircleUser } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { firestoreDb } from '../../firebase';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { firestoreDb, realtimeDb } from '../../firebase';
 import { useToast } from '../../contexts/toast.context';
 import { useDbDataContext } from '../../contexts/dbdata.context';
+import SearchableSelect from '../../components/searchable-select/searchable-select.component';
+import { get, ref } from 'firebase/database';
+import * as XLSX from 'xlsx';
 
 const defaultCourses = [
     'Basic', 
@@ -36,15 +38,9 @@ const Search = () => {
     const [showSearchFields, setShowSearchFields] = useState(false);
     const [isLoading,setIsLoading]=useState(false);
     const {showToast}=useToast();
-    const {globalData,handleSetGlobalData}=useHelperContext();
+    const {globalData,handleSetGlobalData,handleSetPage}=useHelperContext();
     const {allYears,allVenues,dbDataLoading}=useDbDataContext();
     const router = useNavigate();
-    const [queryStament,setQueryStament]=useState({
-        year:'',
-        month:'',
-        course:'',
-        venue:''
-    })
     const [filters, setFilters] = useState({
         course: '',
         month: '',
@@ -52,6 +48,30 @@ const Search = () => {
         venue:'',
     });
     
+
+    const exportTableDataToExcelSheet=()=>{
+        try{
+            setIsLoading(true);
+            const formattedData = globalData.map(d=>({
+                Name:`${d.firstName} ${d.lastName}`,
+                Gender: d.gender,
+                Mobile: d.mobileNumber,
+                Place: d.place,
+                Courses: d.courseDetails.map(c=>c.course).join(',')
+            }));
+            const worksheet = XLSX.utils.json_to_sheet(formattedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook,worksheet,"Users");
+            XLSX.writeFile(workbook,"UserData.xlsx");
+            showToast('Exported successfully')
+        }catch(e){
+            console.error(e)
+            showToast('Error occured try again later');
+        }finally{
+            setIsLoading(false);
+        }
+    }
+
     const handleSearch = async(e) => {
         e.preventDefault();
         const queryTerm = searchType==='first-name' ? 'firstName' : 'mobileNumber'
@@ -75,9 +95,52 @@ const Search = () => {
         }
 
     };
-    const handleFieldSearch = (e) => {
+    const handleFieldSearch = async(e) => {
         e.preventDefault();
-        showToast('not working yet bro....')
+        const { course, year, month, venue } = filters;
+
+        if (!course || !year || !month || !venue) {
+            showToast('Missing query statement parameter, please select appropriate parameters.', 3000);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const refPath = `yearsData/${year.toLowerCase()}/${month.toLowerCase()}/${course.toLowerCase()}/${venue.toLowerCase()}`;
+            const dbRef = ref(realtimeDb,refPath);
+            const snapshot = await get(dbRef);
+
+            if (!snapshot.exists()) {
+                showToast('No matching results found');
+                return;
+            }
+
+            const userIdsObject = snapshot.val(); 
+            const userIds = Object.keys(userIdsObject);
+
+            const userDocs = await Promise.all(
+                userIds.map(async (uid) => {
+                    const userDocRef = doc(firestoreDb, 'persons', uid);
+                    const userSnap = await getDoc(userDocRef);
+                    if (userSnap.exists()) {
+                        return { key: uid, ...userSnap.data() };
+                    }
+                    return null;
+                })
+            );
+
+            const filteredUsers = userDocs.filter(user => user !== null);
+            if (filteredUsers.length > 0) {
+                handleSetGlobalData(filteredUsers);
+            } else {
+                showToast('No valid user records found.');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Error occurred while fetching user data. Try again later.');
+        } finally {
+            setIsLoading(false);
+        }
     };
     
     const handleFilterChange = (e) => {
@@ -86,10 +149,6 @@ const Search = () => {
             ...filters,
             [name]: value
         });
-        setQueryStament({
-            ...queryStament,
-            [name]:value
-        })
     };
     
     const clearFilters = () => {
@@ -100,12 +159,6 @@ const Search = () => {
             year: '',
             certificateNumber: ''
         });
-        setQueryStament({
-            year:'',
-            month:'',
-            course:'',
-            venue:''
-        })
     };
    
     return (
@@ -163,18 +216,7 @@ const Search = () => {
                             
                             <div className='filters-grid'>
                             <div className='filter-group'>
-                                    <label>Year</label>
-                                    {dbDataLoading ? <Loader lh={'20px'} lw={'20px'}/> :<select 
-                                        name='year'
-                                        value={filters.year}
-                                        onChange={handleFilterChange}
-                                        className='filter-select'
-                                    >
-                                        <option value=''>All Years</option>
-                                        {allYears.map((year, index) => (
-                                            <option key={index} value={year}>{year}</option>
-                                        ))}
-                                    </select>}
+                                    {dbDataLoading ? <Loader lh={'20px'} lw={'20px'}/> :<SearchableSelect label={'Year'} name={'year'} value={filters.year} options={allYears} onChange={handleFilterChange} />}
                                 </div>
                                 <div className='filter-group'>
                                     <label>Month</label>
@@ -206,25 +248,10 @@ const Search = () => {
                                 </div>
                                 
                                 <div className='filter-group'>
-                                    <label>Venue</label>
-                                    {dbDataLoading ? <Loader lh={'20px'} lw={'20px'} /> :<select 
-                                        name='venue'
-                                        value={filters.venue}
-                                        onChange={handleFilterChange}
-                                        className='filter-select'
-                                    >
-                                        <option value=''>All Venues</option>
-                                        {allVenues.map((place, index) => (
-                                            <option key={index} value={place}>{place}</option>
-                                        ))}
-                                    </select>}
+                                    {dbDataLoading ? <Loader lh={'20px'} lw={'20px'} /> :<SearchableSelect label={'Venue'} name={'venue'} value={filters.venue} options={allVenues} onChange={handleFilterChange} />}
                                 </div>
-                                
-                                
-                                
-                                
                             </div>
-                            <p className='query-builder'><span className='heading'>Query</span> : people who attended <span>{queryStament.venue || "null"}</span> venue for <span>{queryStament.course ||'null'}</span> course in <span>{queryStament.month || 'null'}</span> month of year <span>{queryStament.year || 'null'}</span> </p>
+                            <p className='query-builder'><span className='heading'>Query</span> : people who attended <span>{filters.venue || "null"}</span> venue for <span>{filters.course ||'null'}</span> course in <span>{filters.month || 'null'}</span> month of year <span>{filters.year || 'null'}</span> </p>
                                 <button title='field search' onClick={handleFieldSearch} disabled={ isLoading} className='field-search-btn'>
                                     {isLoading ? <Loader lh={'22px'} lw={'22px'} /> : <Fragment>
                                     <MdOutlineQueryStats />
@@ -239,7 +266,12 @@ const Search = () => {
             <div className='results-container'>
                 {globalData.length > 0 ? (
                     <>
-                        <h2>Search Results ({globalData.length})</h2>
+                        <div className='d-excel'>
+                            <h2>Search Results ({globalData.length})</h2>
+                            <button onClick={exportTableDataToExcelSheet}>{isLoading ? <Loader lh={'20px'} lw={'20px'} /> : <Fragment>
+                                <FaFileDownload/> <span>XLSX</span>
+                            </Fragment>}</button>
+                        </div>
                         <table className='results-grid'>
                             <thead >
                                 <tr>
@@ -247,17 +279,23 @@ const Search = () => {
                                     <th>Gender</th>
                                     <th>Mobile</th>
                                     <th>Place</th>
-                                    <th>Courses</th>
+                                    <th className='course-details-head'>Courses</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {globalData.map((d)=>{
-                                    return <tr key={d.key} onClick={()=>router(`/editor/${d.key}`,{state:d})}>
-                                        <td className='name'> <FaRegCircleUser className={d.gender} /> {d.firstName+' '+d.lastName}</td>
+                                    return <tr key={d.key} onClick={()=>{
+                                        router(`/editor/${d.key}`,{state:d})
+                                        handleSetPage('editor')
+                                        }}>
+                                        <td className='name'> 
+                                        {d.firstName+' '+d.lastName}</td>
                                         <td>{d.gender}</td>
                                         <td>{d.mobileNumber}</td>
                                         <td>{d.place}</td>
-                                        <td>{d.courseDetails.map(c=>c.course).join(', ')}</td>
+                                        <td className='course-details-body'>{d.courseDetails.map((c,i)=>{
+                                            return <div key={`user-${d.key}-${i}`}>{c.course}</div>
+                                        })}</td>
                                     </tr>
                                 })}
                             </tbody>
