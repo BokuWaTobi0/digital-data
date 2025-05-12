@@ -21,7 +21,7 @@ const defaultCourses = [
     'Psychic Self-Defence', 
     'Kryashakthi', 
     'Arhatic Yoga', 
-    'Spiritual Business Management', 
+    // 'Spiritual Business Management', 
     'Body Sculpting', 
     'Retreat', 
     'Level 1', 
