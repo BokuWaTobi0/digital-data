@@ -53,11 +53,11 @@ const Search = () => {
         try{
             setIsLoading(true);
             const formattedData = globalData.map(d=>({
-                Name:`${d.firstName} ${d.lastName}`,
-                Gender: d.gender,
-                Mobile: d.mobileNumber,
-                Place: d.place,
-                Courses: d.courseDetails.map(c=>c.course).join(',')
+                Name:`${d.firstName.toUpperCase()} ${d.lastName.toUpperCase()}`,
+                Gender: d.gender.toUpperCase(),
+                Mobile: d.mobileNumber.toUpperCase(),
+                Address: d.address.toUpperCase(),
+                Courses: d.courseDetails.map(c=>c.course.toUpperCase()).join(',')
             }));
             const worksheet = XLSX.utils.json_to_sheet(formattedData);
             const workbook = XLSX.utils.book_new();
@@ -81,7 +81,7 @@ const Search = () => {
             setIsLoading(true);
             try{
                 const personsRef = collection(firestoreDb,'persons');
-                const q = query(personsRef,where(queryTerm,'==',searchTerm.toLowerCase()))
+                const q = query(personsRef,where(queryTerm,'==',searchTerm.toLowerCase().trim()))
                 const snapshot = await getDocs(q);
                 if(!snapshot.empty){
                     handleSetGlobalData(snapshot.docs.map(doc=>({key:doc.id,...doc.data()})))
@@ -187,7 +187,7 @@ const Search = () => {
                             placeholder={`Search by ${searchType==='mobile-number' ? 'Mobile Number':'First name'}`} 
                             className='search-input'
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
                             minLength={searchType==='mobile-number' ? 10 : 1}
                         />
                         <button type='submit' disabled={isLoading} className='search-button'>
@@ -281,7 +281,7 @@ const Search = () => {
                                     <th>Name</th>
                                     <th>Gender</th>
                                     <th>Mobile</th>
-                                    <th>Place</th>
+                                    <th>Address</th>
                                     <th className='course-details-head'>Courses</th>
                                 </tr>
                             </thead>
@@ -292,12 +292,12 @@ const Search = () => {
                                         handleSetPage('editor')
                                         }}>
                                         <td className='name'> 
-                                        {d.firstName+' '+d.lastName}</td>
-                                        <td>{d.gender}</td>
+                                        {d.firstName.toUpperCase()+' '+d.lastName.toUpperCase()}</td>
+                                        <td>{d.gender.toUpperCase()}</td>
                                         <td>{d.mobileNumber}</td>
-                                        <td>{d.place}</td>
+                                        <td>{d.address.slice(0,20).toUpperCase()+'.......'}</td>
                                         <td className='course-details-body'>{d.courseDetails.map((c,i)=>{
-                                            return <div key={`user-${d.key}-${i}`}>{c.course}</div>
+                                            return <div key={`user-${d.key}-${i}`}>{c.course.toUpperCase()}</div>
                                         })}</td>
                                     </tr>
                                 })}
