@@ -1,5 +1,5 @@
 import './create.styles.scss'
-import { Fragment, useState } from 'react';
+import { Fragment, useState,useRef } from 'react';
 import { FaArrowRight, FaUserPlus,  FaArrowLeft, FaPlus } from 'react-icons/fa';
 import Loader from '../../components/loader/loader.component';
 import { firestoreDb, realtimeDb } from '../../firebase';
@@ -26,9 +26,10 @@ const defaultCourses = [
 
 const Create = () => {
     const [step, setStep] = useState(1);
+    const firstNameInputRef = useRef(null);
     const [batchData, setBatchData] = useState({
         course: '',
-        place: '',
+        // place: '',
         venue: '',
         day: '',
         month: '',
@@ -45,7 +46,8 @@ const Create = () => {
         gender: 'male',
         mobileNumber: '',
         referenceBy: '',
-        certificateNumber: ''
+        certificateNumber: '',
+        address:''
     });
     
     
@@ -53,7 +55,7 @@ const Create = () => {
         const { name, value } = e.target;
         setBatchData({
             ...batchData,
-            [name]: value
+            [name]: value.toUpperCase()
         });
     };
 
@@ -61,7 +63,7 @@ const Create = () => {
         const { name, value } = e.target;
         setPersonalData({
             ...personalData,
-            [name]: value
+            [name]: value.toUpperCase()
         });
     };
 
@@ -91,26 +93,27 @@ const Create = () => {
                 gender: personalData.gender,
                 mobileNumber: personalData.mobileNumber,
                 referenceBy: personalData.referenceBy,
-                certificateNumber:personalData.certificateNumber
+                certificateNumber:personalData.certificateNumber,
+                address:personalData.address
             };
             const record={
-                firstName: personalData.firstName.toLowerCase(),
-                lastName: personalData.lastName.toLowerCase(),
-                gender: personalData.gender.toLowerCase(),
-                mobileNumber: personalData.mobileNumber,
-                place:batchData.place.toLowerCase(),
+                firstName: personalData.firstName.toLowerCase().trim(),
+                lastName: personalData.lastName.toLowerCase().trim(),
+                gender: personalData.gender.toLowerCase().trim(),
+                mobileNumber: personalData.mobileNumber.trim() || '0000000000',
+                address:personalData.address.toLowerCase().trim(),
                 courseDetails:[{
-                    course:batchData.course.toLowerCase(),
-                    venue:batchData.venue.toLowerCase(),
-                    day:batchData.day,
-                    month:batchData.month.toLowerCase(),
-                    year:batchData.year,
-                    referenceBy:personalData.referenceBy.toLowerCase(),
-                    certificateNumber:personalData.certificateNumber
+                    course:batchData.course.toLowerCase().trim(),
+                    venue:batchData.venue.toLowerCase().trim(),
+                    day:batchData.day.trim(),
+                    month:batchData.month.toLowerCase().trim(),
+                    year:batchData.year.toString().toLowerCase().trim(),
+                    referenceBy:personalData.referenceBy.toLowerCase().trim(),
+                    certificateNumber:personalData.certificateNumber.toString().trim()
                 }]
             }
             
-            if(Object.values(newPerson).length!==6 || Object.values(batchData).length!==6) {
+            if(Object.values(newPerson).length<6 || Object.values(batchData).length<5) {
                 showToast('some details are missing, try re-entering batch and person details',6000)
                 return
             }
@@ -138,8 +141,10 @@ const Create = () => {
                     gender: 'male',
                     mobileNumber: '',
                     referenceBy: '',
-                    certificateNumber: ''
+                    certificateNumber: '',
+                    address:''
                 });
+                firstNameInputRef?.current?.focus();
                 showToast('Added successfully')
             }catch(e){
                 console.error(e)
@@ -182,7 +187,7 @@ const Create = () => {
                             </select>
                         </div>
                         
-                        <div className='form-group'>
+                        {/* <div className='form-group'>
                             <label>Place</label>
                             <input 
                                 type='text' 
@@ -193,7 +198,7 @@ const Create = () => {
                                 required
                                 maxLength={250}
                             />
-                        </div>
+                        </div> */}
                         
                         <div className='form-group'>
                             <label>Venue</label>
@@ -233,18 +238,18 @@ const Create = () => {
                                     required
                                 >
                                     <option value=''>Select Month</option>
-                                    <option value='January'>January</option>
-                                    <option value='February'>February</option>
-                                    <option value='March'>March</option>
-                                    <option value='April'>April</option>
-                                    <option value='May'>May</option>
-                                    <option value='June'>June</option>
-                                    <option value='July'>July</option>
-                                    <option value='August'>August</option>
-                                    <option value='September'>September</option>
-                                    <option value='October'>October</option>
-                                    <option value='November'>November</option>
-                                    <option value='December'>December</option>
+                                    <option value='JANUARY'>January</option>
+                                    <option value='FEBRUARY'>February</option>
+                                    <option value='MARCH'>March</option>
+                                    <option value='APRIL'>April</option>
+                                    <option value='MAY'>May</option>
+                                    <option value='JUNE'>June</option>
+                                    <option value='JULY'>July</option>
+                                    <option value='AUGUST'>August</option>
+                                    <option value='SEPTEMBER'>September</option>
+                                    <option value='OCTOBER'>October</option>
+                                    <option value='NOVEMBER'>November</option>
+                                    <option value='DECEMBER'>December</option>
                                 </select>
                             </div>
                             
@@ -274,7 +279,7 @@ const Create = () => {
                         <h3>Batch Information:</h3>
                         <p>
                             <strong>Course:</strong> {batchData.course} | 
-                            <strong>Place:</strong> {batchData.place} | 
+                            {/* <strong>Place:</strong> {batchData.place} |  */}
                             <strong>Venue:</strong> {batchData.venue} | 
                             <strong>Date:</strong> {batchData.day} {batchData.month} {batchData.year}
                         </p>
@@ -311,7 +316,8 @@ const Create = () => {
                                                 value={personalData.firstName} 
                                                 onChange={handlePersonalChange}
                                                 required
-                                                maxLength={70}
+                                                maxLength={170}
+                                                ref={firstNameInputRef}
                                             />
                                         </div>
                                         
@@ -324,7 +330,7 @@ const Create = () => {
                                                 value={personalData.lastName} 
                                                 onChange={handlePersonalChange}
                                                 required
-                                                maxLength={70}
+                                                maxLength={170}
                                             />
                                         </div>
                                     </div>
@@ -338,9 +344,9 @@ const Create = () => {
                                                 value={personalData.gender} 
                                                 onChange={handlePersonalChange}
                                             >
-                                                <option value='male'>Male</option>
-                                                <option value='female'>Female</option>
-                                                <option value='other'>Other</option>
+                                                <option value='MALE'>Male</option>
+                                                <option value='FEMALE'>Female</option>
+                                                <option value='OTHER'>Other</option>
                                             </select>
                                         </div>
                                         
@@ -352,12 +358,25 @@ const Create = () => {
                                                 className='c-input'
                                                 value={personalData.mobileNumber} 
                                                 onChange={handlePersonalChange}
-                                                required
                                                 minLength={10}
                                             />
                                         </div>
                                     </div>
                                     
+                                    <div className='form-row'>
+                                        <div className='form-group'>
+                                            <label>Address</label>
+                                            <input 
+                                                type='text' 
+                                                name='address' 
+                                                className='c-input'
+                                                value={personalData.address} 
+                                                onChange={handlePersonalChange}
+                                                maxLength={500}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
                                     <div className='form-row'>
                                         <div className='form-group'>
                                             <label>Reference By</label>
@@ -379,8 +398,8 @@ const Create = () => {
                                                 className='c-input'
                                                 value={personalData.certificateNumber} 
                                                 onChange={handlePersonalChange}
-                                                required
                                                 maxLength={200}
+                                                required
                                             />
                                         </div>
                                     </div>

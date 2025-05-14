@@ -57,7 +57,7 @@ const Editor = () => {
         const updatedCourses = [...userData.courseDetails];
         updatedCourses[index] = {
           ...updatedCourses[index],
-          [field]: field !== 'certificateNumber' ? value.toLowerCase() : value 
+          [field]:  value 
         };
         
         setUserData(prevData => ({
@@ -100,11 +100,11 @@ const Editor = () => {
           return;
         }
         const updatedUserData={
-          firstName: userData.firstName.toLowerCase(),
-          lastName: userData.lastName.toLowerCase(),
-          gender: userData.gender.toLowerCase(),
-          mobileNumber: userData.mobileNumber.toLowerCase(),
-          place:userData.place.toLowerCase()
+          firstName: userData.firstName.toLowerCase().trim(),
+          lastName: userData.lastName.toLowerCase().trim(),
+          gender: userData.gender.toLowerCase().trim(),
+          mobileNumber: userData.mobileNumber.toLowerCase().trim(),
+          address:userData.address.toLowerCase().trim()
         }
         const modifiedFields = {};
         for (const field in updatedUserData) {
@@ -116,7 +116,6 @@ const Editor = () => {
           showToast("No changes detected.");
           return;
         }
-      
         try{
           setIsLoading(true);
           const docRef = doc(firestoreDb,'persons',key);
@@ -143,11 +142,23 @@ const Editor = () => {
     return;
   }
 
-  const existingCourses = existingRecord.courseDetails || [];
-  const updatedCourses = userData.courseDetails || [];
+  // normalize courses
+  const normalizeCourse = (course) => ({
+    course: course.course.toLowerCase().trim(),
+    venue: course.venue.toLowerCase().trim(),
+    day: course.day.toString().toLowerCase().trim(),
+    month: course.month.toLowerCase().trim(),
+    year: course.year.toString().toLowerCase().trim(),
+    referenceBy: course.referenceBy.toLowerCase().trim(),
+    certificateNumber: course.certificateNumber.toString().trim(),
+  });
 
-  // Deep comparison for changes
+  const existingCourses = (existingRecord.courseDetails || []).map(normalizeCourse);
+  const updatedCourses = (userData.courseDetails || []).map(normalizeCourse);
+
+  // deep compare normalized arrays
   const isModified = JSON.stringify(existingCourses) !== JSON.stringify(updatedCourses);
+
   if (!isModified) {
     showToast("No changes detected in course details.");
     return;
@@ -160,20 +171,24 @@ const Editor = () => {
 
     const updates = {};
 
+    // handle additions
     updatedCourses.forEach(course => {
       const { year, month, course: courseName, venue } = course;
 
       if (year && !allYears.includes(year)) {
         updates[`allYears/${year}`] = true;
       }
+
       if (venue && !allVenues.includes(venue)) {
         updates[`allVenues/${venue}`] = true;
       }
+
       if (year && month && courseName && venue) {
         updates[`yearsData/${year}/${month}/${courseName}/${venue}/${key}`] = true;
       }
     });
 
+    // handle removals
     const removedCourses = existingCourses.filter(
       oldCourse =>
         !updatedCourses.some(
@@ -188,9 +203,10 @@ const Editor = () => {
     removedCourses.forEach(course => {
       const { year, month, course: courseName, venue } = course;
       if (year && month && courseName && venue) {
-        updates[`yearsData/${year}/${month}/${courseName}/${venue}/${key}`] = null; 
+        updates[`yearsData/${year}/${month}/${courseName}/${venue}/${key}`] = null;
       }
     });
+
     if (Object.keys(updates).length > 0) {
       await update(ref(realtimeDb), updates);
     }
@@ -210,6 +226,7 @@ const Editor = () => {
 };
 
 
+
     return ( 
         <div className="user-form-container">
       <h1 className="form-title">User Information Form</h1>
@@ -221,7 +238,7 @@ const Editor = () => {
             <input
               type="text"
               name="firstName"
-              value={userData.firstName}
+              value={userData.firstName.toUpperCase()}
               onChange={handleChange}
               className="form-input"
             />
@@ -232,7 +249,7 @@ const Editor = () => {
             <input
               type="text"
               name="lastName"
-              value={userData.lastName}
+              value={userData.lastName.toUpperCase()}
               onChange={handleChange}
               className="form-input"
             />
@@ -263,12 +280,12 @@ const Editor = () => {
             />
           </div>
           
-          <div className="form-group">
-            <label className="input-label">Place</label>
+          <div className="form-group full-width">
+            <label className="input-label">Address</label>
             <input
               type="text"
-              name="place"
-              value={userData.place}
+              name="address"
+              value={userData.address.toUpperCase()}
               onChange={handleChange}
               className="form-input"
             />
@@ -313,7 +330,7 @@ const Editor = () => {
                 <label className="input-label">Venue</label>
                 <input
                   type="text"
-                  value={course.venue}
+                  value={course.venue.toUpperCase()}
                   onChange={(e) => handleCourseChange(index, 'venue', e.target.value)}
                   className="form-input"
                   maxLength={300}
@@ -360,7 +377,7 @@ const Editor = () => {
                 <label className="input-label">Referenced By</label>
                 <input
                   type="text"
-                  value={course.referenceBy}
+                  value={course.referenceBy.toUpperCase()}
                   onChange={(e) => handleCourseChange(index, 'referenceBy', e.target.value)}
                   className="form-input"
                   maxLength={300}
