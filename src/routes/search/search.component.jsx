@@ -53,7 +53,8 @@ const Search = () => {
         try{
             setIsLoading(true);
             const formattedData = globalData.map(d=>({
-                Name:`${d.firstName.toUpperCase()} ${d.lastName.toUpperCase()}`,
+                FirstName:d.firstName.toUpperCase(),
+                LastName:d.lastName.toUpperCase(),
                 Gender: d.gender.toUpperCase(),
                 Mobile: d.mobileNumber.toUpperCase(),
                 Address: d.address.toUpperCase(),
