@@ -5,7 +5,7 @@ import Loader from '../../components/loader/loader.component';
 import { useHelperContext } from '../../contexts/helper.context';
 import { useToast } from '../../contexts/toast.context';
 import { firestoreDb, realtimeDb } from '../../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { useDbDataContext } from '../../contexts/dbdata.context';
 import { ref, update } from 'firebase/database';
 import { FaArrowUp } from "react-icons/fa";
@@ -150,13 +150,12 @@ const Editor = () => {
     month: course.month.toLowerCase().trim(),
     year: course.year.toString().toLowerCase().trim(),
     referenceBy: course.referenceBy.toLowerCase().trim(),
-    certificateNumber: course.certificateNumber.toString().trim(),
+    certificateNumber: course.certificateNumber.toString().trim() || '---',
   });
 
   const existingCourses = (existingRecord.courseDetails || []).map(normalizeCourse);
   const updatedCourses = (userData.courseDetails || []).map(normalizeCourse);
 
-  // deep compare normalized arrays
   const isModified = JSON.stringify(existingCourses) !== JSON.stringify(updatedCourses);
 
   if (!isModified) {
@@ -167,11 +166,23 @@ const Editor = () => {
   try {
     setIsLoading(true);
     const docRef = doc(firestoreDb, 'persons', key);
-    await updateDoc(docRef, { courseDetails: updatedCourses });
+
+    const newCertNumbers = updatedCourses
+      .map(c => c.certificateNumber.toLowerCase())
+      .filter(cert => !((existingRecord.certificateNumbers || []).includes(cert)));
+
+    const updatesToFirestore = {
+      courseDetails: updatedCourses
+    };
+
+    if (newCertNumbers.length > 0) {
+      updatesToFirestore.certificateNumbers = arrayUnion(...newCertNumbers);
+    }
+
+    await updateDoc(docRef, updatesToFirestore);
 
     const updates = {};
 
-    // handle additions
     updatedCourses.forEach(course => {
       const { year, month, course: courseName, venue } = course;
 
@@ -188,7 +199,6 @@ const Editor = () => {
       }
     });
 
-    // handle removals
     const removedCourses = existingCourses.filter(
       oldCourse =>
         !updatedCourses.some(
@@ -212,8 +222,18 @@ const Editor = () => {
     }
 
     const updatedGlobalData = globalData.map(person =>
-      person.key === key ? { ...person, courseDetails: updatedCourses } : person
+      person.key === key
+        ? {
+            ...person,
+            courseDetails: updatedCourses,
+            certificateNumbers: [
+              ...(person.certificateNumbers || []),
+              ...newCertNumbers
+            ]
+          }
+        : person
     );
+
     handleSetGlobalData(updatedGlobalData);
 
     showToast("Course details updated successfully.");
@@ -224,7 +244,6 @@ const Editor = () => {
     setIsLoading(false);
   }
 };
-
 
 
     return ( 

@@ -31,10 +31,15 @@ const defaultCourses = [
 const monthsArray=[
     'January','February','March','April','May','June','July','August','September','October','November','December'
 ]
+const searchPlaceholders={
+    "first-name":'First name',
+    "mobile-number":'Mobile number',
+    "certificate-number":'Certificate number'
+}
   
 const Search = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchType,setSearchType]=useState('first-name');
+    const [searchType,setSearchType]=useState('mobile-number');
     const [showSearchFields, setShowSearchFields] = useState(false);
     const [isLoading,setIsLoading]=useState(false);
     const {showToast}=useToast();
@@ -52,19 +57,34 @@ const Search = () => {
     const exportTableDataToExcelSheet=()=>{
         try{
             setIsLoading(true);
-            const formattedData = globalData.map(d=>({
-                FirstName:d.firstName.toUpperCase(),
-                LastName:d.lastName.toUpperCase(),
-                Gender: d.gender.toUpperCase(),
-                Mobile: d.mobileNumber.toUpperCase(),
-                Address: d.address.toUpperCase(),
-                Courses: d.courseDetails.map(c=>c.course.toUpperCase()).join(',')
-            }));
-            const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+            const fileName=isSearchedByField
+             ? `${filters.year}_${filters.month.toLowerCase()}_${filters.course.toLowerCase()}_${filters.venue.toLowerCase()}` 
+             :`${searchTerm }`
+             const finalFileName = fileName || `digital-data - ${new Date().toUTCString().split('GMT')[0].trim()}`;
+
+            const dataRows = globalData.map((d,i)=>[
+                i+1,
+                d.firstName.toUpperCase(),
+                d.lastName.toUpperCase(),
+                d.mobileNumber.toUpperCase(),
+                d.courseDetails.map(c=>c.course.toUpperCase()).join(','),
+                d.courseDetails.map(c=>c.referenceBy.toUpperCase()).join(',')
+            ])
+
+            const headers = ['Sno','FirstName','LastName','Mobile','Courses','References']
+
+            const worksheetData=[
+                [finalFileName], //title row
+                [],
+                headers,
+                ...dataRows
+            ]
+
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook,worksheet,"Users");
-            const fileName=isSearchedByField ? `${filters.year}_${filters.month.toLowerCase()}_${filters.course.toLowerCase()}_${filters.venue.toLowerCase()}` :`${searchTerm }`
-            XLSX.writeFile(workbook,`${fileName || 'digital-data'}.xlsx`);
+            XLSX.writeFile(workbook,`${finalFileName}.xlsx`)
             showToast('Exported successfully')
         }catch(e){
             console.error(e)
@@ -77,13 +97,23 @@ const Search = () => {
     const handleSearch = async(e) => {
         e.preventDefault();
         if(isSearchedByField) setIsSearchedByField(false);
-        const queryTerm = searchType==='first-name' ? 'firstName' : 'mobileNumber'
-        if(searchTerm.trim()){
-            setIsLoading(true);
+
+        const normalizedTerm = searchTerm.toLowerCase().trim();
+        if(!normalizedTerm) return;
+
+        setIsLoading(true);
+
             try{
                 const personsRef = collection(firestoreDb,'persons');
-                const q = query(personsRef,where(queryTerm,'==',searchTerm.toLowerCase().trim()))
-                const snapshot = await getDocs(q);
+                let snapshot;
+                if(searchType==='certificate-number'){
+                    const q = query(personsRef,where('certificateNumbers','array-contains',normalizedTerm));
+                    snapshot = await getDocs(q);
+                }else{
+                    const queryTerm = searchType === 'first-name' ? 'firstName' : 'mobileNumber';
+                    const q = query(personsRef,where(queryTerm,'==',normalizedTerm));
+                    snapshot = await getDocs(q);
+                }
                 if(!snapshot.empty){
                     handleSetGlobalData(snapshot.docs.map(doc=>({key:doc.id,...doc.data()})))
                 }else{
@@ -95,7 +125,7 @@ const Search = () => {
             }finally{
                 setIsLoading(false);
             }
-        }
+        
 
     };
     const handleFieldSearch = async(e) => {
@@ -182,10 +212,11 @@ const Search = () => {
                     >
                         <option value='first-name'>First Name</option>
                         <option value='mobile-number'>Mobile Number</option>
+                        <option value='certificate-number'>Cerificate Number</option>
                     </select>
                         <input 
                             type='search' 
-                            placeholder={`Search by ${searchType==='mobile-number' ? 'Mobile Number':'First name'}`} 
+                            placeholder={`Search by ${searchPlaceholders[searchType]}`} 
                             className='search-input'
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
