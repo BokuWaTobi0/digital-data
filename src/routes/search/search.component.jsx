@@ -43,7 +43,7 @@ const Search = () => {
     const [showSearchFields, setShowSearchFields] = useState(false);
     const [isLoading,setIsLoading]=useState(false);
     const {showToast}=useToast();
-    const {globalData,handleSetGlobalData,handleSetPage}=useHelperContext();
+    const {globalData,handleSetGlobalData,handleSetPage,xlsxName,handleSetXlsxName}=useHelperContext();
     const {allYears,allVenues,dbDataLoading}=useDbDataContext();
     const router = useNavigate();
     const [isSearchedByField,setIsSearchedByField]=useState(false);
@@ -58,10 +58,7 @@ const Search = () => {
         try{
             setIsLoading(true);
 
-            const fileName=isSearchedByField
-             ? `${filters.year}_${filters.month.toLowerCase()}_${filters.course.toLowerCase()}_${filters.venue.toLowerCase()}` 
-             :`${searchTerm }`
-             const finalFileName = fileName || `digital-data - ${new Date().toUTCString().split('GMT')[0].trim()}`;
+             const finalFileName = 'search by  '+xlsxName || `digital-data`;
 
             const dataRows = globalData.map((d,i)=>[
                 i+1,
@@ -116,6 +113,7 @@ const Search = () => {
                 }
                 if(!snapshot.empty){
                     handleSetGlobalData(snapshot.docs.map(doc=>({key:doc.id,...doc.data()})))
+                    handleSetXlsxName(normalizedTerm);
                 }else{
                     showToast('No mathcing results')
                 }
@@ -166,6 +164,7 @@ const Search = () => {
             const filteredUsers = userDocs.filter(user => user !== null);
             if (filteredUsers.length > 0) {
                 handleSetGlobalData(filteredUsers);
+                handleSetXlsxName(`${year.toLowerCase()}/${month.toLowerCase()}/${course.toLowerCase()}/${venue.toLowerCase()}`);
             } else {
                 showToast('No valid user records found.');
             }
