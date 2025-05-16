@@ -109,11 +109,14 @@ const Create = () => {
                     month:batchData.month.toLowerCase().trim(),
                     year:batchData.year.toString().toLowerCase().trim(),
                     referenceBy:personalData.referenceBy.toLowerCase().trim(),
-                    certificateNumber:personalData.certificateNumber.toString().trim()
-                }]
+                    certificateNumber:personalData.certificateNumber.toString().trim() || '---'
+                }],
+                certificateNumbers:[
+                    personalData.certificateNumber.toString().trim().toLowerCase() || '---'
+                ]
             }
             
-            if(Object.values(newPerson).length<6 || Object.values(batchData).length<5) {
+            if(Object.values(newPerson).length<5 || Object.values(batchData).length<5) {
                 showToast('some details are missing, try re-entering batch and person details',6000)
                 return
             }
@@ -399,7 +402,6 @@ const Create = () => {
                                                 value={personalData.certificateNumber} 
                                                 onChange={handlePersonalChange}
                                                 maxLength={200}
-                                                required
                                             />
                                         </div>
                                     </div>
