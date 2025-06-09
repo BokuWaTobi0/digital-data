@@ -69,7 +69,9 @@ const Search = () => {
                 d.courseDetails.map(c=>c.referenceBy.toUpperCase()).join(',')
             ])
 
-            const headers = ['Sno','FirstName','LastName','Mobile','Courses','References']
+            // need a optional email field
+            // const headers = ['Sno','FirstName','LastName','Mobile','Courses','References']
+            const headers = ['Sno','FirstName','LastName','Mobile','Courses','References','Email']
 
             const worksheetData=[
                 [finalFileName], //title row
