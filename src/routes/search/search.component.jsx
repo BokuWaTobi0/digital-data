@@ -66,11 +66,10 @@ const Search = () => {
                 d.lastName.toUpperCase(),
                 d.mobileNumber.toUpperCase(),
                 d.courseDetails.map(c=>c.course.toUpperCase()).join(','),
-                d.courseDetails.map(c=>c.referenceBy.toUpperCase()).join(',')
+                d.courseDetails.map(c=>c.referenceBy.toUpperCase()).join(','),
+                d.email.toUpperCase()
             ])
 
-            // need a optional email field
-            // const headers = ['Sno','FirstName','LastName','Mobile','Courses','References']
             const headers = ['Sno','FirstName','LastName','Mobile','Courses','References','Email']
 
             const worksheetData=[
