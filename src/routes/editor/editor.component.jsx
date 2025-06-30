@@ -104,7 +104,8 @@ const Editor = () => {
           lastName: userData.lastName.toLowerCase().trim(),
           gender: userData.gender.toLowerCase().trim(),
           mobileNumber: userData.mobileNumber.toLowerCase().trim(),
-          address:userData.address.toLowerCase().trim()
+          address:userData.address.toLowerCase().trim(),
+          email:userData.email.toLowerCase().trim(),
         }
         const modifiedFields = {};
         for (const field in updatedUserData) {
@@ -260,6 +261,7 @@ const Editor = () => {
               value={userData.firstName.toUpperCase()}
               onChange={handleChange}
               className="form-input"
+              maxLength={170}
             />
           </div>
           
@@ -271,6 +273,7 @@ const Editor = () => {
               value={userData.lastName.toUpperCase()}
               onChange={handleChange}
               className="form-input"
+              maxLength={170}
             />
           </div>
           
@@ -296,10 +299,12 @@ const Editor = () => {
               value={userData.mobileNumber}
               onChange={handleChange}
               className="form-input"
+              minLength={10}
+              maxLength={40}
             />
           </div>
           
-          <div className="form-group full-width">
+          <div className="form-group">
             <label className="input-label">Address</label>
             <input
               type="text"
@@ -307,6 +312,18 @@ const Editor = () => {
               value={userData.address.toUpperCase()}
               onChange={handleChange}
               className="form-input"
+              maxLength={500}
+            />
+          </div>
+          <div className="form-group">
+            <label className="input-label">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={userData.email.toUpperCase()}
+              onChange={handleChange}
+              className="form-input"
+              maxLength={200}
             />
           </div>
         </div>

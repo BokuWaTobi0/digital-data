@@ -47,7 +47,8 @@ const Create = () => {
         mobileNumber: '',
         referenceBy: '',
         certificateNumber: '',
-        address:''
+        address:'',
+        email:'',
     });
     
     
@@ -94,7 +95,8 @@ const Create = () => {
                 mobileNumber: personalData.mobileNumber,
                 referenceBy: personalData.referenceBy,
                 certificateNumber:personalData.certificateNumber,
-                address:personalData.address
+                address:personalData.address,
+                email:personalData.email,
             };
             const record={
                 firstName: personalData.firstName.toLowerCase().trim(),
@@ -102,6 +104,7 @@ const Create = () => {
                 gender: personalData.gender.toLowerCase().trim(),
                 mobileNumber: personalData.mobileNumber.trim() || '0000000000',
                 address:personalData.address.toLowerCase().trim(),
+                email:personalData.email.toLowerCase().trim() || 'empty@gmail.com',
                 courseDetails:[{
                     course:batchData.course.toLowerCase().trim(),
                     venue:batchData.venue.toLowerCase().trim(),
@@ -119,7 +122,7 @@ const Create = () => {
             if(Object.values(newPerson).length<5 || Object.values(batchData).length<5) {
                 showToast('some details are missing, try re-entering batch and person details',6000)
                 return
-            }
+            } 
             try{
                 setIsLoading(true)
                 const personRef = await addDoc(collection(firestoreDb,'persons'),record);
@@ -362,11 +365,23 @@ const Create = () => {
                                                 value={personalData.mobileNumber} 
                                                 onChange={handlePersonalChange}
                                                 minLength={10}
+                                                maxLength={40}
                                             />
                                         </div>
                                     </div>
                                     
                                     <div className='form-row'>
+                                        <div className='form-group'>
+                                            <label>Email</label>
+                                            <input 
+                                                type='email' 
+                                                name='email' 
+                                                className='c-input'
+                                                value={personalData.email} 
+                                                onChange={handlePersonalChange}
+                                                maxLength={200}
+                                            />
+                                        </div>
                                         <div className='form-group'>
                                             <label>Address</label>
                                             <input 
